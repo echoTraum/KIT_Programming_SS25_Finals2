@@ -1,0 +1,35 @@
+name: Autograder
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  run-jar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout your repo
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Download latest autograder-cmd.jar
+        run: |
+          url=$(curl -s https://api.github.com/repos/Feuermagier/autograder/releases/latest \
+            | jq -r '.assets[] | select(.name | test("autograder-cmd.*\\.jar$")) | .browser_download_url' | head -n1)
+          echo "Download: $url"
+          curl -L "$url" -o autograder-cmd.jar
+
+      - name: Run autograder
+        run: |
+          CONFIG="tools/config.yaml"
+          if [ ! -f "$CONFIG" ]; then
+            echo "config.yaml nicht gefunden!"
+            exit 2
+          fi
+
+          java -jar autograder-cmd.jar "$CONFIG" --static-only "$GITHUB_WORKSPACE"
