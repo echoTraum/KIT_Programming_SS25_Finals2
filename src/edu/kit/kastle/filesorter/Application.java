@@ -1,5 +1,7 @@
 package edu.kit.kastle.filesorter;
 
+import edu.kit.kastle.filesorter.view.CommandHandler;
+
 /**
  * The class offering the entry point for the application.
  *
@@ -27,5 +29,7 @@ public final class Application {
             return;
         }
         System.out.println(WELCOME_MESSAGE);
+        CommandHandler commandHandler = new CommandHandler();
+        commandHandler.run();
     }
 }
