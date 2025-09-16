@@ -1,4 +1,6 @@
-package edu.kit.kastle.filesorter;
+package edu.kit.kastel.filesorter;
+
+import edu.kit.kastel.filesorter.view.CommandExecuter;
 
 /**
  * The class offering the entry point for the application.

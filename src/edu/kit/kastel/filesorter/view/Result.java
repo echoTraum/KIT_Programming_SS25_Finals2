@@ -1,4 +1,4 @@
-package edu.kit.kastle.filesorter.view;
+package edu.kit.kastel.filesorter.view;
 
 /**
  * The result of a command execution.
