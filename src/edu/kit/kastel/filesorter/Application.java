@@ -1,6 +1,7 @@
 package edu.kit.kastel.filesorter;
 
-import edu.kit.kastel.filesorter.view.CommandExecuter;
+import edu.kit.kastel.filesorter.model.SequenceMatcherRunner;
+import edu.kit.kastel.filesorter.view.CLISessionRunner;
 
 /**
  * The class offering the entry point for the application.
@@ -11,8 +12,6 @@ import edu.kit.kastel.filesorter.view.CommandExecuter;
 public final class Application {
 
     private static final String ERROR_MESSAGE_COMMAND_LINE_ARGUMENTS = "Error: Expected no command line arguments";
-    private static final String WELCOME_MESSAGE = "Use one of the following commands :"
-                    + " load , input , tokenization , analyze , clear , list , top , matches , histogram , edit , inspect , quit .";
 
     private Application() {
         // utility class
@@ -28,6 +27,11 @@ public final class Application {
             System.err.println(ERROR_MESSAGE_COMMAND_LINE_ARGUMENTS);
             return;
         }
-        System.out.println(WELCOME_MESSAGE);
+        try (CLISessionRunner sessionRunner = new CLISessionRunner(System.in, System.out, System.err)) {
+            SequenceMatcherRunner sequenceRunner = new SequenceMatcherRunner(sessionRunner);
+            sequenceRunner.start();
+
+        }
+
     }
 }
