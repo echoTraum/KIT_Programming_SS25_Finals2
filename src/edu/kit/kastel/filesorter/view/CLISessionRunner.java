@@ -27,7 +27,7 @@ public class CLISessionRunner implements SessionRunner, AutoCloseable {
             + " load , input , tokenization , analyze , clear , list , top , matches , histogram , edit , inspect , quit .";
 
     private final Scanner scanner;
-    final CommandExecuter<SequenceMatcher, ModelKeyword> executer;
+    private final CommandExecuter<SequenceMatcher, ModelKeyword> executer;
     private boolean wasQuit = false;
 
     /**
