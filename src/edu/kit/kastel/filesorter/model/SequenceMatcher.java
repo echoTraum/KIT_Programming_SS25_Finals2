@@ -17,6 +17,8 @@ import java.util.Objects;
  * <p>The model keeps track of all texts that have been loaded via the user interface. Each text is
  * identified by the file name of the source that has been loaded. A subsequent load using the same
  * identifier replaces the previously stored text.</p>
+ *
+ * @author ugsrv
  */
 public class SequenceMatcher {
 

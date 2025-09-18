@@ -28,10 +28,10 @@ public enum ModelKeyword implements Keyword<SequenceMatcher> {
      */
     LOAD(arguments -> new Load(parsePath(arguments)));
 
-
+    private static final String ERROR_INVALID_PATH = "invalid path";
     private static final String VALUE_NAME_DELIMITER = "_";
     private final CommandProvider<SequenceMatcher> provider;
-    private static final String ERROR_INVALID_PATH = "invalid path";
+
 
     ModelKeyword(CommandProvider<SequenceMatcher> provider) {
         this.provider = provider;

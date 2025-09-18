@@ -8,6 +8,8 @@ import java.nio.file.Path;
 
 /**
  * Command that loads a text from the provided file path into the {@link SequenceMatcher}.
+ *
+ * @author ugsrv
  */
 public class Load implements Command<SequenceMatcher> {
 

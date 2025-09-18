@@ -6,6 +6,8 @@ import edu.kit.kastel.filesorter.view.Result;
 
 /**
  * Command that stores a text provided via the command line directly in the {@link SequenceMatcher}.
+ *
+ * @author ugsrv
  */
 public class Input implements Command<SequenceMatcher> {
 
