@@ -1,5 +1,6 @@
 package edu.kit.kastel.filesorter.view;
 
+import java.util.Arrays;
 
 /**
  * This class represents the arguments of a {@link Command}.
@@ -12,6 +13,7 @@ public class Arguments {
     private static final String ERROR_TOO_FEW_ARGUMENTS = "too few arguments";
     private static final String ERROR_NOT_A_NUMBER_FORMAT = "'%s' must be an integer.";
     private static final String ERROR_NOT_POSITIVE_FORMAT = "'%d' must be positive.";
+    private static final String SPACE = " ";
     private final String[] arguments;
     private int argumentIndex;
 
@@ -48,6 +50,22 @@ public class Arguments {
      */
     public String parseString() throws InvalidArgumentException {
         return retrieveArgument();
+    }
+
+    /**
+     * Parses the remaining arguments as a single string separated by spaces.
+     *
+     * @return the remaining arguments joined by spaces
+     * @throws InvalidArgumentException if there is no argument left to parse
+     */
+    public String parseRemaining() throws InvalidArgumentException {
+        if (isExhausted()) {
+            throw new InvalidArgumentException(ERROR_TOO_FEW_ARGUMENTS);
+        }
+
+        String remaining = String.join(SPACE, Arrays.copyOfRange(arguments, argumentIndex, arguments.length));
+        argumentIndex = arguments.length;
+        return remaining;
     }
 
     /**

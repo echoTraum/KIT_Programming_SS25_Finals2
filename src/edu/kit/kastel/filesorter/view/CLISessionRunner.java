@@ -27,13 +27,14 @@ public class CLISessionRunner implements SessionRunner, AutoCloseable {
             + " load , input , tokenization , analyze , clear , list , top , matches , histogram , edit , inspect , quit .";
 
     private final Scanner scanner;
-    final CommandExecuter<SequenceMatcher, ModelKeyword> executer;
+    private final CommandExecuter<SequenceMatcher, ModelKeyword> executer;
     private boolean wasQuit = false;
 
     /**
      * Constructs a new client using the provided input source and output streams when interacting.
      *
      * @param inputSource the input source used to retrieve the user input
+     * @param defaultOutputStream the stream used to print the default output
      * @param errorStream the stream used to print the error output
      */
     public CLISessionRunner(InputStream inputSource, PrintStream defaultOutputStream, PrintStream errorStream) {
