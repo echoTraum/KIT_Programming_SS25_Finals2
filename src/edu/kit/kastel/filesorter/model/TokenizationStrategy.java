@@ -69,14 +69,13 @@ public enum TokenizationStrategy {
                 char current = text.charAt(index);
                 if (Character.isWhitespace(current)) {
                     flushToken(tokens, currentToken);
-                    continue;
-                }
-                if (Character.isLetterOrDigit(current) || isWordConnector(text, index)) {
+                } else if (Character.isLetterOrDigit(current) || isWordConnector(text, index)) {
                     currentToken.append(current);
-                    continue;
+
+                }else {
+                    flushToken(tokens, currentToken);
+                    tokens.add(String.valueOf(current));
                 }
-                flushToken(tokens, currentToken);
-                tokens.add(String.valueOf(current));
             }
             flushToken(tokens, currentToken);
             return tokens;
@@ -96,7 +95,7 @@ public enum TokenizationStrategy {
         }
 
         private static void flushToken(List<String> tokens, StringBuilder currentToken) {
-            if (currentToken.length() > 0) {
+            if (!currentToken.isEmpty()) {
                 tokens.add(currentToken.toString());
                 currentToken.setLength(0);
             }
