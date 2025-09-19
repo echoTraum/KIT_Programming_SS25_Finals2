@@ -130,17 +130,4 @@ public enum TokenizationStrategy {
         throw new IllegalArgumentException("Unknown tokenization strategy: " + value);
     }
 
-    /**
-     * Returns the names of all available strategies joined by commas.
-     *
-     * @return the available strategy names
-     */
-    public static String availableNames() {
-        TokenizationStrategy[] strategies = values();
-        String[] names = new String[strategies.length];
-        for (int index = 0; index < strategies.length; index++) {
-            names[index] = strategies[index].name();
-        }
-        return String.join(", ", names);
-    }
 }

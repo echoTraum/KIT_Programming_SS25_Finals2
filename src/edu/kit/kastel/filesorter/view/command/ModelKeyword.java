@@ -87,9 +87,7 @@ public enum ModelKeyword implements Keyword<SequenceMatcher> {
         try {
             return TokenizationStrategy.fromName(strategyArgument);
         } catch (IllegalArgumentException e) {
-            String available = TokenizationStrategy.availableNames();
-            throw new InvalidArgumentException(
-                    "%s (available: %s)".formatted(ERROR_INVALID_STRATEGY, available));
+            throw new InvalidArgumentException(ERROR_INVALID_STRATEGY);
         }
     }
 }
