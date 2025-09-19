@@ -1,6 +1,7 @@
 package edu.kit.kastel.filesorter.view.command;
 
 import edu.kit.kastel.filesorter.model.SequenceMatcher;
+import edu.kit.kastel.filesorter.model.TokenizationStrategy;
 
 import edu.kit.kastel.filesorter.view.Arguments;
 import edu.kit.kastel.filesorter.view.Command;
@@ -26,9 +27,15 @@ public enum ModelKeyword implements Keyword<SequenceMatcher> {
     /**
      * Keyword for the {@link Load} command.
      */
-    LOAD(arguments -> new Load(parsePath(arguments)));
+    LOAD(arguments -> new Load(parsePath(arguments))),
+
+    /**
+     * Keyword for the {@link Tokenization} command.
+     */
+    TOKENIZATION(arguments -> new Tokenization(arguments.parseString(), parseTokenizationStrategy(arguments)));
 
     private static final String ERROR_INVALID_PATH = "invalid path";
+    private static final String ERROR_INVALID_STRATEGY = "invalid strategy";
     private static final String VALUE_NAME_DELIMITER = "_";
     private final CommandProvider<SequenceMatcher> provider;
 
@@ -72,5 +79,17 @@ public enum ModelKeyword implements Keyword<SequenceMatcher> {
 
     private static String parseText(Arguments arguments) throws InvalidArgumentException {
         return arguments.parseRemaining();
+    }
+
+    private static TokenizationStrategy parseTokenizationStrategy(Arguments arguments)
+            throws InvalidArgumentException {
+        String strategyArgument = arguments.parseString();
+        try {
+            return TokenizationStrategy.fromName(strategyArgument);
+        } catch (IllegalArgumentException e) {
+            String available = TokenizationStrategy.availableNames();
+            throw new InvalidArgumentException(
+                    "%s (available: %s)".formatted(ERROR_INVALID_STRATEGY, available));
+        }
     }
 }

@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -25,6 +26,9 @@ public class SequenceMatcher {
     private static final String ERROR_COULD_NOT_READ_FILE = "Could not read file.";
     private static final String MESSAGE_LOADED = "Loaded %s";
     private static final String MESSAGE_UPDATED = "Updated %s";
+    private static final String ERROR_UNKNOWN_IDENTIFIER = "No text stored for identifier '%s'.";
+    private static final String ERROR_MISSING_IDENTIFIER = "No identifier provided.";
+    private static final String ERROR_MISSING_STRATEGY = "No tokenization strategy provided.";
 
     private final Map<String, LoadedText> loadedTexts = new LinkedHashMap<>();
 
@@ -93,6 +97,30 @@ public class SequenceMatcher {
         Objects.requireNonNull(text);
 
         return storeText(identifier, null, text);
+    }
+
+    /**
+     * Tokenizes the stored text identified by the provided identifier using the given strategy.
+     *
+     * @param identifier the identifier of the text to tokenize
+     * @param strategy the tokenization strategy to apply
+     * @return the result of the tokenization attempt
+     */
+    public TokenizationResult tokenize(String identifier, TokenizationStrategy strategy) {
+        if (identifier == null) {
+            return TokenizationResult.error(ERROR_MISSING_IDENTIFIER);
+        }
+        if (strategy == null) {
+            return TokenizationResult.error(ERROR_MISSING_STRATEGY);
+        }
+
+        LoadedText loadedText = this.loadedTexts.get(identifier);
+        if (loadedText == null) {
+            return TokenizationResult.error(ERROR_UNKNOWN_IDENTIFIER.formatted(identifier));
+        }
+
+        List<String> tokens = strategy.tokenize(loadedText.content());
+        return TokenizationResult.success(tokens);
     }
 
     private Result storeText(String identifier, Path source, String content) {
