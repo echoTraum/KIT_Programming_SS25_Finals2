@@ -11,6 +11,8 @@ import java.util.Objects;
  *
  * @param tokens the produced tokens (empty when an error occurred)
  * @param errorMessage the error message in case of a failure; {@code null} for successful results
+ *
+ * @author ugsrv
  */
 public record TokenizationResult(List<String> tokens, String errorMessage) {
 

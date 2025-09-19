@@ -19,6 +19,8 @@ import java.util.Objects;
  *     tokens.</li>
  * </ul>
  * </p>
+ *
+ * @author ugsrv
  */
 public enum TokenizationStrategy {
     /**

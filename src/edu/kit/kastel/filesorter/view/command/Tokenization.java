@@ -8,6 +8,8 @@ import edu.kit.kastel.filesorter.view.Result;
 
 /**
  * Command that retrieves the tokenization of a stored text from the {@link SequenceMatcher}.
+ *
+ * @author ugsrv
  */
 public class Tokenization implements Command<SequenceMatcher> {
 
