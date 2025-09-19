@@ -19,6 +19,8 @@ import java.util.Objects;
  *     tokens.</li>
  * </ul>
  * </p>
+ *
+ * @author ugsrv
  */
 public enum TokenizationStrategy {
     /**
@@ -72,7 +74,7 @@ public enum TokenizationStrategy {
                 } else if (Character.isLetterOrDigit(current) || isWordConnector(text, index)) {
                     currentToken.append(current);
 
-                }else {
+                } else {
                     flushToken(tokens, currentToken);
                     tokens.add(String.valueOf(current));
                 }
