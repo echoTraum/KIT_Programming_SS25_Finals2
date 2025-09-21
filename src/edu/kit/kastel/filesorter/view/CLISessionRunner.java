@@ -23,7 +23,7 @@ import java.util.Scanner;
  * @author Programmieren-Team
  */
 public class CLISessionRunner implements SessionRunner, AutoCloseable {
-    private static final String WELCOME_MESSAGE = "Use one of the following commands : "
+    private static final String WELCOME_MESSAGE = "Use one of the following commands: "
             + "load, input, tokenization, analyze, clear, list, top, matches, histogram, edit, inspect, quit.";
 
     private final Scanner scanner;
