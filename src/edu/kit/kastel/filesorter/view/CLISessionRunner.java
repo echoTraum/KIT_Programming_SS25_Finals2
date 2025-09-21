@@ -24,7 +24,7 @@ import java.util.Scanner;
  */
 public class CLISessionRunner implements SessionRunner, AutoCloseable {
     private static final String WELCOME_MESSAGE = "Use one of the following commands : "
-            + "load , input , tokenization , analyze , clear , list , top , matches , histogram , edit , inspect , quit.";
+            + "load, input, tokenization, analyze, clear, list, top, matches, histogram, edit, inspect, quit.";
 
     private final Scanner scanner;
     private final CommandExecuter<SequenceMatcher, ModelKeyword> executer;
