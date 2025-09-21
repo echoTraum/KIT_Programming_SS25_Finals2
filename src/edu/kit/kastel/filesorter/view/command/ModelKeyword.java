@@ -2,7 +2,6 @@ package edu.kit.kastel.filesorter.view.command;
 
 import edu.kit.kastel.filesorter.model.SequenceMatcher;
 import edu.kit.kastel.filesorter.model.TokenizationStrategy;
-
 import edu.kit.kastel.filesorter.view.Arguments;
 import edu.kit.kastel.filesorter.view.Command;
 import edu.kit.kastel.filesorter.view.CommandProvider;
@@ -32,7 +31,12 @@ public enum ModelKeyword implements Keyword<SequenceMatcher> {
     /**
      * Keyword for the {@link Tokenization} command.
      */
-    TOKENIZATION(arguments -> new Tokenization(arguments.parseString(), parseTokenizationStrategy(arguments)));
+    TOKENIZATION(arguments -> new Tokenization(arguments.parseString(), parseTokenizationStrategy(arguments))),
+
+    /**
+     * Keyword for the {@link Analyze} command.
+     */
+    ANALYZE(arguments -> new Analyze(parseTokenizationStrategy(arguments), arguments.parsePositive()));
 
     private static final String ERROR_INVALID_PATH = "invalid path";
     private static final String ERROR_INVALID_STRATEGY = "invalid strategy";
