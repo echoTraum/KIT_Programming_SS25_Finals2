@@ -10,7 +10,9 @@ import java.util.Objects;
  * Represents the result of a text analysis.
  *
  * <p>The result stores the configuration that has been used for the analysis as well as the
- * produced matches and tokenizations. Instances of this class are immutable.</p>
+ * produced matches and tokenization. Instances of this class are immutable.</p>
+ *
+ * @author ugsrv
  */
 public final class AnalysisResult {
 
@@ -22,12 +24,15 @@ public final class AnalysisResult {
     private final List<AnalysisMatch> matches;
 
     /**
-     * Creates a new analysis result.
+     * Constructs an immutable object representing the result of a text analysis.
      *
-     * @param strategy the strategy that was used to tokenize the texts
-     * @param minMatchLength the minimum length a match must have to be included in the result
-     * @param tokenizedTexts the tokenized representation of all texts considered for the analysis
-     * @param matches the matches that have been found between the texts
+     * @param strategy the tokenization strategy used for splitting texts into tokens
+     * @param minMatchLength the minimum number of tokens a match must contain to be included in the result
+     * @param tokenizedTexts a map containing the tokenized representations of analyzed texts,
+     *                       where keys are identifiers for the texts and values are the lists of tokens
+     * @param matches a list of matches found during text analysis
+     * @throws NullPointerException if {@code strategy}, {@code tokenizedTexts}, or {@code matches} is {@code null}
+     * @throws IllegalArgumentException if {@code minMatchLength} is less than 1
      */
     public AnalysisResult(TokenizationStrategy strategy, int minMatchLength,
             Map<String, List<String>> tokenizedTexts, List<AnalysisMatch> matches) {

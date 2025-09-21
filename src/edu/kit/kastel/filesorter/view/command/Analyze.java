@@ -7,6 +7,8 @@ import edu.kit.kastel.filesorter.view.Result;
 
 /**
  * Command that triggers a text analysis for all loaded texts in the {@link SequenceMatcher}.
+ *
+ * @author ugsrv
  */
 public class Analyze implements Command<SequenceMatcher> {
 

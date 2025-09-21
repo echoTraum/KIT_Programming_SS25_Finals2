@@ -10,6 +10,8 @@ import java.util.Objects;
  * @param secondIdentifier the identifier of the second text containing the match
  * @param secondIndex the starting token index of the match within the second text
  * @param length the length of the match measured in tokens
+ *
+ * @author ugsrv
  */
 public record AnalysisMatch(String firstIdentifier, int firstIndex,
         String secondIdentifier, int secondIndex, int length) {
