@@ -7,10 +7,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Represents the application's model storing the texts that are available for comparison.
@@ -29,8 +32,11 @@ public class SequenceMatcher {
     private static final String ERROR_UNKNOWN_IDENTIFIER = "No text stored for identifier '%s'.";
     private static final String ERROR_MISSING_IDENTIFIER = "No identifier provided.";
     private static final String ERROR_MISSING_STRATEGY = "No tokenization strategy provided.";
+    private static final String ERROR_INVALID_MIN_MATCH_LENGTH = "Minimum match length must be positive.";
+    private static final String MESSAGE_ANALYSIS_TOOK = "Analysis took %dms";
 
     private final Map<String, LoadedText> loadedTexts = new LinkedHashMap<>();
+    private AnalysisResult lastAnalysisResult;
 
     /**
      * Loads the contents of the file located at the provided {@link Path}. The file name is used as
@@ -121,6 +127,88 @@ public class SequenceMatcher {
 
         List<String> tokens = strategy.tokenize(loadedText.content());
         return TokenizationResult.success(tokens);
+    }
+
+    /**
+     * Executes a text analysis on all loaded texts using the provided strategy and minimum match length.
+     *
+     * @param strategy the strategy to use for tokenizing the texts prior to analysis
+     * @param minMatchLength the minimum length of a match measured in tokens
+     * @return the result of the analysis
+     */
+    public Result analyze(TokenizationStrategy strategy, int minMatchLength) {
+        if (strategy == null) {
+            return Result.error(ERROR_MISSING_STRATEGY);
+        }
+        if (minMatchLength < 1) {
+            return Result.error(ERROR_INVALID_MIN_MATCH_LENGTH);
+        }
+
+        long startTime = System.nanoTime();
+
+        Map<String, List<String>> tokenizedTexts = new LinkedHashMap<>();
+        for (LoadedText loadedText : this.loadedTexts.values()) {
+            tokenizedTexts.put(loadedText.identifier(), strategy.tokenize(loadedText.content()));
+        }
+
+        List<AnalysisMatch> matches = collectMatches(tokenizedTexts, minMatchLength);
+        this.lastAnalysisResult = new AnalysisResult(strategy, minMatchLength, tokenizedTexts, matches);
+
+        long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
+        return Result.success(MESSAGE_ANALYSIS_TOOK.formatted(durationMs));
+    }
+
+    /**
+     * Returns the result of the most recent analysis.
+     *
+     * @return the last analysis result or {@code null} if no analysis has been executed yet
+     */
+    public AnalysisResult getLastAnalysisResult() {
+        return this.lastAnalysisResult;
+    }
+
+    private static List<AnalysisMatch> collectMatches(Map<String, List<String>> tokenizedTexts, int minMatchLength) {
+        List<AnalysisMatch> matches = new ArrayList<>();
+        List<Entry<String, List<String>>> entries = new ArrayList<>(tokenizedTexts.entrySet());
+        for (int firstTextIndex = 0; firstTextIndex < entries.size(); firstTextIndex++) {
+            for (int secondTextIndex = firstTextIndex + 1; secondTextIndex < entries.size(); secondTextIndex++) {
+                matches.addAll(findMatches(entries.get(firstTextIndex), entries.get(secondTextIndex), minMatchLength));
+            }
+        }
+        return matches;
+    }
+
+    private static List<AnalysisMatch> findMatches(Entry<String, List<String>> firstEntry,
+            Entry<String, List<String>> secondEntry, int minMatchLength) {
+        List<AnalysisMatch> matches = new ArrayList<>();
+        List<String> firstTokens = firstEntry.getValue();
+        List<String> secondTokens = secondEntry.getValue();
+        for (int firstIndex = 0; firstIndex < firstTokens.size(); firstIndex++) {
+            for (int secondIndex = 0; secondIndex < secondTokens.size(); secondIndex++) {
+                int matchLength = determineMatchLength(firstTokens, secondTokens, firstIndex, secondIndex);
+                if (matchLength >= minMatchLength
+                        && isStartOfMatch(firstTokens, secondTokens, firstIndex, secondIndex)) {
+                    matches.add(new AnalysisMatch(firstEntry.getKey(), firstIndex,
+                            secondEntry.getKey(), secondIndex, matchLength));
+                }
+            }
+        }
+        return matches;
+    }
+
+    private static int determineMatchLength(List<String> firstTokens, List<String> secondTokens, int firstIndex,
+            int secondIndex) {
+        int length = 0;
+        for (; firstIndex + length < firstTokens.size() && secondIndex + length < secondTokens.size()
+                     && firstTokens.get(firstIndex + length).equals(secondTokens.get(secondIndex + length)); length++) {
+            length++;
+        }
+        return length;
+    }
+
+    private static boolean isStartOfMatch(List<String> firstTokens, List<String> secondTokens, int firstIndex,
+            int secondIndex) {
+        return firstIndex == 0 || secondIndex == 0 || !firstTokens.get(firstIndex - 1).equals(secondTokens.get(secondIndex - 1));
     }
 
     private Result storeText(String identifier, Path source, String content) {
