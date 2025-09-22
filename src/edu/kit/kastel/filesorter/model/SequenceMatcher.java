@@ -34,6 +34,7 @@ public class SequenceMatcher {
     private static final String ERROR_MISSING_STRATEGY = "No tokenization strategy provided.";
     private static final String ERROR_INVALID_MIN_MATCH_LENGTH = "Minimum match length must be positive.";
     private static final String MESSAGE_ANALYSIS_TOOK = "Analysis took %dms";
+    private static final String MESSAGE_CLEARED = "Cleared all texts .";
 
     private final Map<String, LoadedText> loadedTexts = new LinkedHashMap<>();
     private AnalysisResult lastAnalysisResult;
@@ -165,6 +166,17 @@ public class SequenceMatcher {
      */
     public AnalysisResult getLastAnalysisResult() {
         return this.lastAnalysisResult;
+    }
+
+    /**
+     * Removes all texts currently stored in this matcher.
+     *
+     * @return the result of the clear operation
+     */
+    public Result clear() {
+        this.loadedTexts.clear();
+        this.lastAnalysisResult = null;
+        return Result.success(MESSAGE_CLEARED);
     }
 
     private static List<AnalysisMatch> collectMatches(Map<String, List<String>> tokenizedTexts, int minMatchLength) {
