@@ -199,8 +199,8 @@ public class SequenceMatcher {
     private static int determineMatchLength(List<String> firstTokens, List<String> secondTokens, int firstIndex,
             int secondIndex) {
         int length = 0;
-        while (firstIndex + length < firstTokens.size() && secondIndex + length < secondTokens.size()
-                && firstTokens.get(firstIndex + length).equals(secondTokens.get(secondIndex + length))) {
+        for (; firstIndex + length < firstTokens.size() && secondIndex + length < secondTokens.size()
+                     && firstTokens.get(firstIndex + length).equals(secondTokens.get(secondIndex + length)); length++) {
             length++;
         }
         return length;
@@ -208,10 +208,7 @@ public class SequenceMatcher {
 
     private static boolean isStartOfMatch(List<String> firstTokens, List<String> secondTokens, int firstIndex,
             int secondIndex) {
-        if (firstIndex == 0 || secondIndex == 0) {
-            return true;
-        }
-        return !firstTokens.get(firstIndex - 1).equals(secondTokens.get(secondIndex - 1));
+        return firstIndex == 0 || secondIndex == 0 || !firstTokens.get(firstIndex - 1).equals(secondTokens.get(secondIndex - 1));
     }
 
     private Result storeText(String identifier, Path source, String content) {

@@ -85,10 +85,7 @@ public enum TokenizationStrategy {
 
         private static boolean isWordConnector(String text, int index) {
             char connector = text.charAt(index);
-            if (connector != APOSTROPHE && connector != HYPHEN_MINUS) {
-                return false;
-            }
-            if (index == 0 || index >= text.length() - 1) {
+            if (connector != APOSTROPHE && connector != HYPHEN_MINUS || index == 0 || index >= text.length() - 1){
                 return false;
             }
             char previous = text.charAt(index - 1);
