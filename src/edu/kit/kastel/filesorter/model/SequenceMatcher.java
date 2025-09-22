@@ -34,7 +34,7 @@ public class SequenceMatcher {
     private static final String ERROR_MISSING_STRATEGY = "No tokenization strategy provided.";
     private static final String ERROR_INVALID_MIN_MATCH_LENGTH = "Minimum match length must be positive.";
     private static final String MESSAGE_ANALYSIS_TOOK = "Analysis took %dms";
-    private static final String MESSAGE_CLEARED = "Cleared all texts .";
+    private static final String MESSAGE_CLEARED = "Cleared all texts.";
 
     private final Map<String, LoadedText> loadedTexts = new LinkedHashMap<>();
     private AnalysisResult lastAnalysisResult;

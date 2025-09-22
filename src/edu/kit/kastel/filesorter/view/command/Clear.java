@@ -6,6 +6,8 @@ import edu.kit.kastel.filesorter.view.Result;
 
 /**
  * Command that removes all texts currently stored in the {@link SequenceMatcher}.
+ *
+ * @author ugsrv
  */
 public class Clear implements Command<SequenceMatcher> {
 
