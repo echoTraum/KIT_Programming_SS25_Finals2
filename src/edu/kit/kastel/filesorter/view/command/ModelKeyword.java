@@ -29,6 +29,11 @@ public enum ModelKeyword implements Keyword<SequenceMatcher> {
     LOAD(arguments -> new Load(parsePath(arguments))),
 
     /**
+     * Keyword for the {@link Clear} command.
+     */
+    CLEAR(arguments -> new Clear()),
+
+    /**
      * Keyword for the {@link Tokenization} command.
      */
     TOKENIZATION(arguments -> new Tokenization(arguments.parseString(), parseTokenizationStrategy(arguments))),
