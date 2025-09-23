@@ -54,20 +54,32 @@ public class List implements Command<SequenceMatcher> {
         return new List(metric, order);
     }
 
+
+
     private static ListMetric parseMetric(String value) throws InvalidArgumentException {
-        try {
-            return ListMetric.valueOf(value.trim().toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException e) {
+        if (value == null) {
             throw new InvalidArgumentException(ERROR_INVALID_METRIC);
         }
+        String normalizedValue = value.trim().toUpperCase(Locale.ROOT);
+        for (ListMetric metric : ListMetric.values()) {
+            if (metric.name().equals(normalizedValue)) {
+                return metric;
+            }
+        }
+        throw new InvalidArgumentException(ERROR_INVALID_METRIC);
     }
 
     private static SortOrder parseOrder(String value) throws InvalidArgumentException {
-        try {
-            return SortOrder.valueOf(value.trim().toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException e) {
+        if (value == null) {
             throw new InvalidArgumentException(ERROR_INVALID_ORDER);
         }
+        String normalizedValue = value.trim().toUpperCase(Locale.ROOT);
+        for (SortOrder order : SortOrder.values()) {
+            if (order.name().equals(normalizedValue)) {
+                return order;
+            }
+        }
+        throw new InvalidArgumentException(ERROR_INVALID_ORDER);
     }
 
     @Override
