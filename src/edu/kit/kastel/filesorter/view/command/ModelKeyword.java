@@ -39,7 +39,12 @@ public enum ModelKeyword implements Keyword<SequenceMatcher> {
     /**
      * Keyword for the {@link Analyze} command.
      */
-    ANALYZE(arguments -> new Analyze(parseTokenizationStrategy(arguments), arguments.parsePositive()));
+    ANALYZE(arguments -> new Analyze(parseTokenizationStrategy(arguments), arguments.parsePositive())),
+
+    /**
+     * Keyword for the {@link List} command.
+     */
+    LIST(List::fromArguments);
 
     private static final String ERROR_INVALID_PATH = "invalid path";
     private static final String ERROR_INVALID_STRATEGY = "invalid strategy";
