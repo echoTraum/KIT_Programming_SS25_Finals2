@@ -12,6 +12,8 @@ import java.util.Locale;
 
 /**
  * Command that lists aggregated match statistics for each analyzed text pair.
+ *
+ * @author ugsrv
  */
 public class List implements Command<SequenceMatcher> {
 
