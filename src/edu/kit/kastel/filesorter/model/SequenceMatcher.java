@@ -236,7 +236,7 @@ public class SequenceMatcher {
                 && secondIndex + length < secondTokens.size()
                 && firstTokens.get(firstIndex + length).equals(secondTokens.get(secondIndex + length))) {
             length++;
-           }
+        }
         return length;
     }
 
