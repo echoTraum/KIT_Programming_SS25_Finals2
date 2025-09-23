@@ -2,6 +2,8 @@ package edu.kit.kastel.filesorter.model;
 
 /**
  * Sort order options supported by commands returning ordered output.
+ *
+ * @author ugsrv
  */
 public enum SortOrder {
     /**

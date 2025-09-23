@@ -2,6 +2,8 @@ package edu.kit.kastel.filesorter.model;
 
 /**
  * Metrics supported by the list command when summarizing analysis results.
+ *
+ * @author ugsrv
  */
 public enum ListMetric {
     /**
