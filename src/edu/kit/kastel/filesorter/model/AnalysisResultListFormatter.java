@@ -9,6 +9,8 @@ import java.util.Map;
 
 /**
  * Formats the statistics of an {@link AnalysisResult} according to the selected metric and order.
+ *
+ * @author ugsrv
  */
 final class AnalysisResultListFormatter {
 
