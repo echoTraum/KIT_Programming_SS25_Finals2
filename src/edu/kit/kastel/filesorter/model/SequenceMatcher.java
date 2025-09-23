@@ -8,13 +8,11 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -198,59 +196,8 @@ public class SequenceMatcher {
             return Result.error(ERROR_NO_ANALYSIS_RESULT);
         }
 
-        Map<String, List<String>> tokenizedTexts = this.lastAnalysisResult.tokenizedTexts();
-        List<String> identifiers = new ArrayList<>(tokenizedTexts.keySet());
-        if (identifiers.size() < 2) {
-            return Result.success("");
-        }
-
-        Map<PairKey, PairStatistics> statistics = new LinkedHashMap<>();
-        for (int firstIndex = 0; firstIndex < identifiers.size(); firstIndex++) {
-            for (int secondIndex = firstIndex + 1; secondIndex < identifiers.size(); secondIndex++) {
-                String firstIdentifier = identifiers.get(firstIndex);
-                String secondIdentifier = identifiers.get(secondIndex);
-                statistics.put(new PairKey(firstIdentifier, secondIdentifier),
-                        new PairStatistics(firstIdentifier, secondIdentifier,
-                                tokenizedTexts.get(firstIdentifier).size(),
-                                tokenizedTexts.get(secondIdentifier).size()));
-            }
-        }
-
-        for (AnalysisMatch match : this.lastAnalysisResult.matches()) {
-            PairKey key = new PairKey(match.firstIdentifier(), match.secondIdentifier());
-            PairStatistics stats = statistics.get(key);
-            if (stats == null) {
-                List<String> firstTokens = tokenizedTexts.get(match.firstIdentifier());
-                List<String> secondTokens = tokenizedTexts.get(match.secondIdentifier());
-                if (firstTokens == null || secondTokens == null) {
-                    continue;
-                }
-                stats = new PairStatistics(match.firstIdentifier(), match.secondIdentifier(),
-                        firstTokens.size(), secondTokens.size());
-                statistics.put(key, stats);
-            }
-            stats.addMatch(match.length());
-        }
-
-        List<PairMetricValue> values = new ArrayList<>();
-        for (PairStatistics stats : statistics.values()) {
-            values.add(new PairMetricValue(stats, computeMetricValue(stats, metric)));
-        }
-
-        Comparator<PairMetricValue> comparator = Comparator.comparingDouble(PairMetricValue::value);
-        if (order == SortOrder.DESC) {
-            comparator = comparator.reversed();
-        }
-        comparator = comparator.thenComparing(value -> value.statistics().firstIdentifier())
-                .thenComparing(value -> value.statistics().secondIdentifier());
-        values.sort(comparator);
-
-        List<String> lines = new ArrayList<>(values.size());
-        for (PairMetricValue value : values) {
-            lines.add(formatLine(value.statistics(), metric));
-        }
-
-        return Result.success(String.join(System.lineSeparator(), lines));
+        return Result.success(AnalysisResultListFormatter
+                .format(this.lastAnalysisResult, metric, order));
     }
 
     private static List<AnalysisMatch> collectMatches(Map<String, List<String>> tokenizedTexts, int minMatchLength) {
@@ -297,39 +244,6 @@ public class SequenceMatcher {
         return firstIndex == 0 || secondIndex == 0 || !firstTokens.get(firstIndex - 1).equals(secondTokens.get(secondIndex - 1));
     }
 
-    private static double computeMetricValue(PairStatistics statistics, ListMetric metric) {
-        return switch (metric) {
-            case AVG -> statistics.averageLength();
-            case MAX -> statistics.maxLength();
-            case MIN -> statistics.minLength();
-            case LONG -> statistics.longerTextLength();
-            case LEN -> statistics.totalMatchLength();
-        };
-    }
-
-    private static String formatLine(PairStatistics statistics, ListMetric metric) {
-        return statistics.firstIdentifier() + "-" + statistics.secondIdentifier() + ": "
-                + formatMetric(statistics, metric);
-    }
-
-    private static String formatMetric(PairStatistics statistics, ListMetric metric) {
-        return switch (metric) {
-            case AVG -> formatDecimal(statistics.averageLength());
-            case MAX -> formatInteger(statistics.maxLength());
-            case MIN -> formatInteger(statistics.minLength());
-            case LONG -> formatInteger(statistics.longerTextLength());
-            case LEN -> formatInteger(statistics.totalMatchLength());
-        };
-    }
-
-    private static String formatDecimal(double value) {
-        return String.format(Locale.ROOT, "%.2f", value);
-    }
-
-    private static String formatInteger(long value) {
-        return Long.toString(value);
-    }
-
     private Result storeText(String identifier, Path source, String content) {
         boolean wasPresent = this.loadedTexts.containsKey(identifier);
         this.loadedTexts.put(identifier, new LoadedText(identifier, source, content));
@@ -338,71 +252,5 @@ public class SequenceMatcher {
     }
 
     private record LoadedText(String identifier, Path path, String content) {
-    }
-
-    private record PairKey(String firstIdentifier, String secondIdentifier) {
-    }
-
-    private static final class PairStatistics {
-        private final String firstIdentifier;
-        private final String secondIdentifier;
-        private final int firstTextLength;
-        private final int secondTextLength;
-        private long totalMatchLength;
-        private int matchCount;
-        private int maxMatchLength;
-        private int minMatchLength = Integer.MAX_VALUE;
-
-        PairStatistics(String firstIdentifier, String secondIdentifier, int firstTextLength, int secondTextLength) {
-            this.firstIdentifier = firstIdentifier;
-            this.secondIdentifier = secondIdentifier;
-            this.firstTextLength = firstTextLength;
-            this.secondTextLength = secondTextLength;
-        }
-
-        void addMatch(int length) {
-            this.totalMatchLength += length;
-            this.matchCount++;
-            if (length > this.maxMatchLength) {
-                this.maxMatchLength = length;
-            }
-            if (length < this.minMatchLength) {
-                this.minMatchLength = length;
-            }
-        }
-
-        String firstIdentifier() {
-            return this.firstIdentifier;
-        }
-
-        String secondIdentifier() {
-            return this.secondIdentifier;
-        }
-
-        double averageLength() {
-            if (this.matchCount == 0) {
-                return 0.0d;
-            }
-            return (double) this.totalMatchLength / this.matchCount;
-        }
-
-        int maxLength() {
-            return this.matchCount == 0 ? 0 : this.maxMatchLength;
-        }
-
-        int minLength() {
-            return this.matchCount == 0 ? 0 : this.minMatchLength;
-        }
-
-        long totalMatchLength() {
-            return this.totalMatchLength;
-        }
-
-        int longerTextLength() {
-            return Math.max(this.firstTextLength, this.secondTextLength);
-        }
-    }
-
-    private record PairMetricValue(PairStatistics statistics, double value) {
     }
 }
