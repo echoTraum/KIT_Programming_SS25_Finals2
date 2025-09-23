@@ -2,14 +2,12 @@ package edu.kit.kastel.filesorter.view.command;
 
 import edu.kit.kastel.filesorter.model.SequenceMatcher;
 import edu.kit.kastel.filesorter.model.TokenizationStrategy;
+import edu.kit.kastel.filesorter.util.PathValidator;
 import edu.kit.kastel.filesorter.view.Arguments;
 import edu.kit.kastel.filesorter.view.Command;
 import edu.kit.kastel.filesorter.view.CommandProvider;
 import edu.kit.kastel.filesorter.view.InvalidArgumentException;
 import edu.kit.kastel.filesorter.view.Keyword;
-
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
 
 /**
  * This enum represents all keywords for commands handling a {@link SequenceMatcher}.
@@ -77,13 +75,12 @@ public enum ModelKeyword implements Keyword<SequenceMatcher> {
         return name().split(VALUE_NAME_DELIMITER).length;
     }
 
-    private static Path parsePath(Arguments arguments) throws InvalidArgumentException {
+    private static String parsePath(Arguments arguments) throws InvalidArgumentException {
         String pathArgument = arguments.parseString();
-        try {
-            return Path.of(pathArgument);
-        } catch (InvalidPathException e) {
+        if (!PathValidator.isValid(pathArgument)) {
             throw new InvalidArgumentException(ERROR_INVALID_PATH);
         }
+        return pathArgument;
     }
 
     private static String parseText(Arguments arguments) throws InvalidArgumentException {

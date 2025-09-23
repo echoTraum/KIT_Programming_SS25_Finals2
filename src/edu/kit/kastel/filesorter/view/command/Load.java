@@ -4,8 +4,6 @@ import edu.kit.kastel.filesorter.model.SequenceMatcher;
 import edu.kit.kastel.filesorter.view.Command;
 import edu.kit.kastel.filesorter.view.Result;
 
-import java.nio.file.Path;
-
 /**
  * Command that loads a text from the provided file path into the {@link SequenceMatcher}.
  *
@@ -13,14 +11,14 @@ import java.nio.file.Path;
  */
 public class Load implements Command<SequenceMatcher> {
 
-    private final Path path;
+    private final String path;
 
     /**
      * Creates a new command.
      *
      * @param path the path to load the text from
      */
-    public Load(Path path) {
+    public Load(String path) {
         this.path = path;
     }
 

@@ -1,11 +1,12 @@
 package edu.kit.kastel.filesorter.model;
 
+import edu.kit.kastel.filesorter.util.PathValidator;
 import edu.kit.kastel.filesorter.view.Result;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -49,30 +50,7 @@ public class SequenceMatcher {
      */
     public Result load(Path path) {
         Objects.requireNonNull(path);
-        Path normalizedPath;
-        try {
-            normalizedPath = path.toAbsolutePath().normalize();
-        } catch (InvalidPathException e) {
-            return Result.error(ERROR_COULD_NOT_READ_FILE);
-        }
-
-        Path fileNamePath = normalizedPath.getFileName();
-        if (fileNamePath == null) {
-            return Result.error(ERROR_COULD_NOT_READ_FILE);
-        }
-
-        String identifier = fileNamePath.toString();
-        String content;
-        try {
-            if (!Files.isRegularFile(normalizedPath)) {
-                return Result.error(ERROR_COULD_NOT_READ_FILE);
-            }
-            content = Files.readString(normalizedPath, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            return Result.error(ERROR_COULD_NOT_READ_FILE);
-        }
-
-        return storeText(identifier, normalizedPath, content);
+        return load(path.toString());
     }
 
     /**
@@ -84,11 +62,30 @@ public class SequenceMatcher {
      */
     public Result load(String path) {
         Objects.requireNonNull(path);
-        try {
-            return load(Path.of(path));
-        } catch (InvalidPathException e) {
+        if (!PathValidator.isValid(path)) {
             return Result.error(ERROR_COULD_NOT_READ_FILE);
         }
+
+        File file = new File(path);
+        File canonicalFile;
+        try {
+            canonicalFile = file.getCanonicalFile();
+        } catch (IOException e) {
+            return Result.error(ERROR_COULD_NOT_READ_FILE);
+        }
+
+        if (!canonicalFile.isFile()) {
+            return Result.error(ERROR_COULD_NOT_READ_FILE);
+        }
+
+        String content;
+        try (FileInputStream inputStream = new FileInputStream(canonicalFile)) {
+            content = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            return Result.error(ERROR_COULD_NOT_READ_FILE);
+        }
+
+        return storeText(canonicalFile.getName(), canonicalFile.getPath(), content);
     }
 
     /**
@@ -223,13 +220,13 @@ public class SequenceMatcher {
         return firstIndex == 0 || secondIndex == 0 || !firstTokens.get(firstIndex - 1).equals(secondTokens.get(secondIndex - 1));
     }
 
-    private Result storeText(String identifier, Path source, String content) {
+    private Result storeText(String identifier, String source, String content) {
         boolean wasPresent = this.loadedTexts.containsKey(identifier);
         this.loadedTexts.put(identifier, new LoadedText(identifier, source, content));
 
         return Result.success((wasPresent ? MESSAGE_UPDATED : MESSAGE_LOADED).formatted(identifier));
     }
 
-    private record LoadedText(String identifier, Path path, String content) {
+    private record LoadedText(String identifier, String source, String content) {
     }
 }
