@@ -232,10 +232,11 @@ public class SequenceMatcher {
     private static int determineMatchLength(List<String> firstTokens, List<String> secondTokens, int firstIndex,
             int secondIndex) {
         int length = 0;
-        for (; firstIndex + length < firstTokens.size() && secondIndex + length < secondTokens.size()
-                     && firstTokens.get(firstIndex + length).equals(secondTokens.get(secondIndex + length)); length++) {
+        while (firstIndex + length < firstTokens.size()
+                && secondIndex + length < secondTokens.size()
+                && firstTokens.get(firstIndex + length).equals(secondTokens.get(secondIndex + length))) {
             length++;
-        }
+           }
         return length;
     }
 
