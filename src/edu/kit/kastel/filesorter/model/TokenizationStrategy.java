@@ -59,7 +59,7 @@ public enum TokenizationStrategy {
      */
     SMART {
         private static final char APOSTROPHE = '\'';
-        private static final char HYPHEN_MINUS = '-';
+        private static final char WORD_CONNECTOR = '-';
 
         @Override
         public List<String> tokenize(String text) {
@@ -85,7 +85,7 @@ public enum TokenizationStrategy {
 
         private static boolean isWordConnector(String text, int index) {
             char connector = text.charAt(index);
-            if (connector != APOSTROPHE && connector != HYPHEN_MINUS || index == 0 || index >= text.length() - 1) {
+            if (connector != APOSTROPHE && connector != WORD_CONNECTOR || index == 0 || index >= text.length() - 1) {
                 return false;
             }
             char previous = text.charAt(index - 1);
@@ -100,6 +100,8 @@ public enum TokenizationStrategy {
             }
         }
     };
+
+    private static final String ERROR_UNKNOWN_STRATEGY = "Unknown tokenization strategy: %s";
 
     /**
      * Tokenizes the provided text.
@@ -137,7 +139,7 @@ public enum TokenizationStrategy {
     public static TokenizationStrategy fromName(String value) {
         TokenizationStrategy strategy = findByName(value);
         if (strategy == null) {
-            throw new IllegalArgumentException("Unknown tokenization strategy: " + value);
+            throw new IllegalArgumentException(ERROR_UNKNOWN_STRATEGY.formatted(value));
         }
         return strategy;
     }
