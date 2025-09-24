@@ -1,12 +1,16 @@
 package edu.kit.kastel.filesorter.view.command;
 
+import edu.kit.kastel.filesorter.model.AnalysisMatch;
 import edu.kit.kastel.filesorter.model.AnalysisResult;
 import edu.kit.kastel.filesorter.model.SequenceMatcher;
 import edu.kit.kastel.filesorter.view.Command;
 import edu.kit.kastel.filesorter.view.Result;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.OptionalInt;
 
 /**
@@ -36,20 +40,29 @@ abstract class AbstractPairListCommand implements Command<SequenceMatcher> {
             return Result.error(ERROR_NO_ANALYSIS_RESULT);
         }
 
-        List<PairSummary> summaries = PairSummaryCollector.collectSummaries(analysisResult);
+        List<PairSummary> summaries = collectSummaries(analysisResult);
         if (summaries.isEmpty()) {
             return Result.success(MESSAGE_NO_PROGRAM_PAIRS);
         }
 
+        Comparator<PairSummary> comparator = getPairSummaryComparator();
+
+        summaries.sort(comparator);
+        return Result.success(formatSummaries(summaries));
+    }
+
+    private Comparator<PairSummary> getPairSummaryComparator() {
         Comparator<PairSummary> comparator = Comparator.comparingDouble(this.metric::extract);
         if (this.order == SortOrder.DESCENDING) {
             comparator = comparator.reversed();
         }
-        comparator = comparator.thenComparing(PairSummary::firstIdentifier)
-                .thenComparing(PairSummary::secondIdentifier);
-
-        summaries.sort(comparator);
-        return Result.success(formatSummaries(summaries));
+        Comparator<PairSummary> firstIdentifierComparator = Comparator.comparing(
+                summary -> determineDisplayOrder(summary).firstIdentifier());
+        Comparator<PairSummary> secondIdentifierComparator = Comparator.comparing(
+                summary -> determineDisplayOrder(summary).secondIdentifier());
+        comparator = comparator.thenComparing(firstIdentifierComparator)
+                .thenComparing(secondIdentifierComparator);
+        return comparator;
     }
 
     private String formatSummaries(List<PairSummary> summaries) {
@@ -71,8 +84,92 @@ abstract class AbstractPairListCommand implements Command<SequenceMatcher> {
 
     private String formatSummary(PairSummary summary) {
         double metricValue = this.metric.extract(summary);
-        return "%s-%s: %s".formatted(summary.firstIdentifier(), summary.secondIdentifier(),
+        PairIdentifiers identifiers = determineDisplayOrder(summary);
+        return "%s-%s: %s".formatted(identifiers.secondIdentifier(), identifiers.firstIdentifier(),
                 this.metric.format(metricValue));
     }
 
+    private static List<PairSummary> collectSummaries(AnalysisResult analysisResult) {
+        Map<String, List<String>> tokenizedTexts = analysisResult.tokenizedTexts();
+        List<String> identifiers = new ArrayList<>(tokenizedTexts.keySet());
+        if (identifiers.size() < 2) {
+            return List.of();
+        }
+
+        Map<PairKey, PairAccumulator> accumulators = new LinkedHashMap<>();
+        for (int firstIndex = 0; firstIndex < identifiers.size(); firstIndex++) {
+            for (int secondIndex = firstIndex + 1; secondIndex < identifiers.size(); secondIndex++) {
+                String firstIdentifier = identifiers.get(firstIndex);
+                String secondIdentifier = identifiers.get(secondIndex);
+                int firstTokenCount = tokenizedTexts.get(firstIdentifier).size();
+                int secondTokenCount = tokenizedTexts.get(secondIdentifier).size();
+                accumulators.put(new PairKey(firstIdentifier, secondIdentifier),
+                        new PairAccumulator(firstIdentifier, secondIdentifier, firstTokenCount, secondTokenCount));
+            }
+        }
+
+        for (AnalysisMatch match : analysisResult.matches()) {
+            PairKey key = new PairKey(match.firstIdentifier(), match.secondIdentifier());
+            PairAccumulator accumulator = accumulators.get(key);
+            if (accumulator != null) {
+                accumulator.addMatch(match);
+            }
+        }
+
+        List<PairSummary> summaries = new ArrayList<>(accumulators.size());
+        for (PairAccumulator accumulator : accumulators.values()) {
+            summaries.add(accumulator.toSummary());
+        }
+        return summaries;
+    }
+
+    private PairIdentifiers determineDisplayOrder(PairSummary summary) {
+        return switch (this.metric) {
+            case MAX -> orientBySimilarity(summary, true);
+            case MIN -> orientBySimilarity(summary, false);
+            default -> new PairIdentifiers(summary.firstIdentifier(), summary.secondIdentifier());
+        };
+    }
+
+    private static PairIdentifiers orientBySimilarity(PairSummary summary, boolean preferLargerFirst) {
+        double firstSimilarity = summary.similarityToFirst();
+        double secondSimilarity = summary.similarityToSecond();
+        if ((preferLargerFirst && secondSimilarity > firstSimilarity)
+                || (!preferLargerFirst && secondSimilarity < firstSimilarity)) {
+            return new PairIdentifiers(summary.secondIdentifier(), summary.firstIdentifier());
+        }
+        return new PairIdentifiers(summary.firstIdentifier(), summary.secondIdentifier());
+    }
+
+    private record PairKey(String firstIdentifier, String secondIdentifier) {
+    }
+
+    private static final class PairAccumulator {
+        private final String firstIdentifier;
+        private final String secondIdentifier;
+        private final int firstTokenCount;
+        private final int secondTokenCount;
+        private int totalMatchLength;
+        private int longestMatchLength;
+
+        PairAccumulator(String firstIdentifier, String secondIdentifier, int firstTokenCount, int secondTokenCount) {
+            this.firstIdentifier = firstIdentifier;
+            this.secondIdentifier = secondIdentifier;
+            this.firstTokenCount = firstTokenCount;
+            this.secondTokenCount = secondTokenCount;
+        }
+
+        void addMatch(AnalysisMatch match) {
+            this.totalMatchLength += match.length();
+            this.longestMatchLength = Math.max(this.longestMatchLength, match.length());
+        }
+
+        PairSummary toSummary() {
+            return new PairSummary(this.firstIdentifier, this.secondIdentifier, this.firstTokenCount,
+                    this.secondTokenCount, this.totalMatchLength, this.longestMatchLength);
+        }
+    }
+
+    private record PairIdentifiers(String firstIdentifier, String secondIdentifier) {
+    }
 }
