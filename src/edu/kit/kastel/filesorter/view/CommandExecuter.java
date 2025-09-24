@@ -57,16 +57,6 @@ public class CommandExecuter<M, K extends Enum<K> & Keyword<M>> {
     }
 
     /**
-     * Constructs a new command executer using the same input and output ressources as the provided one.
-     * 
-     * @param ioRessources another executer to retrieve input and output ressources from
-     * @param keywordClass the class of the command provider to look up possible commands
-     */
-    public CommandExecuter(CommandExecuter<?, ?> ioRessources, Class<K> keywordClass) {
-        this(ioRessources.scanner, ioRessources.defaultStream, ioRessources.errorStream, keywordClass);
-    }
-
-    /**
      * Returns the default stream that this executer has been registered with.
      *
      * @return the default stream of this executer
@@ -113,8 +103,8 @@ public class CommandExecuter<M, K extends Enum<K> & Keyword<M>> {
 
     private void handleLine(String line) {
         String[] splittedLine = line.split(COMMAND_SEPARATOR, -1);
-        if (!findAndHandleCommand(this.viewKeywords, this, splittedLine)
-                && !findAndHandleCommand(this.modelKeywords, this.model, splittedLine)) {
+        if (findAndHandleCommand(this.viewKeywords, this, splittedLine)
+                && findAndHandleCommand(this.modelKeywords, this.model, splittedLine)) {
             this.errorStream.println(ERROR_UNKNOWN_COMMAND);
         }
     }
@@ -124,9 +114,9 @@ public class CommandExecuter<M, K extends Enum<K> & Keyword<M>> {
         if (keyword != null) {
             String[] arguments = Arrays.copyOfRange(command, keyword.words(), command.length);
             handleCommand(value, arguments, keyword);
-            return true;
+            return false;
         }
-        return false;
+        return true;
     }
 
     private <S, T extends Keyword<S>> void handleCommand(S value, String[] arguments, T keyword) {

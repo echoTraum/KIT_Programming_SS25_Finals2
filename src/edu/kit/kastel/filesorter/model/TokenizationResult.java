@@ -17,6 +17,17 @@ import java.util.Objects;
 public record TokenizationResult(List<String> tokens, String errorMessage) {
 
     /**
+     * Constructs a result of a tokenization operation.
+     *
+     * @param tokens the list of tokens resulting from the tokenization process
+     * @param errorMessage the error message describing the reason for a failure, or null if the tokenization was successful
+     */
+    public TokenizationResult(List<String> tokens, String errorMessage) {
+        this.tokens = List.copyOf(tokens);
+        this.errorMessage = errorMessage;
+    }
+
+    /**
      * Creates a successful tokenization result.
      *
      * @param tokens the generated tokens

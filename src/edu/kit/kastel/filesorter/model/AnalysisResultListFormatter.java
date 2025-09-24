@@ -14,6 +14,9 @@ import java.util.Map;
  */
 final class AnalysisResultListFormatter {
 
+    private static final String FORMAT_STATISTICS = "%s-%s: %s";
+    private static final String DECIMAL_FORMAT_PATTERN = "%.2f";
+
     private AnalysisResultListFormatter() {
     }
 
@@ -27,6 +30,16 @@ final class AnalysisResultListFormatter {
         Map<PairKey, PairStatistics> statistics = initializeStatistics(tokenizedTexts, identifiers);
         applyMatches(analysisResult.matches(), statistics, tokenizedTexts);
 
+        List<PairStatistics> orderedStatistics = getPairStatistics(metric, order, statistics);
+
+        List<String> lines = new ArrayList<>(orderedStatistics.size());
+        for (PairStatistics stats : orderedStatistics) {
+            lines.add(formatLine(stats, metric));
+        }
+        return String.join(System.lineSeparator(), lines);
+    }
+
+    private static List<PairStatistics> getPairStatistics(ListMetric metric, SortOrder order, Map<PairKey, PairStatistics> statistics) {
         List<PairStatistics> orderedStatistics = new ArrayList<>(statistics.values());
         Comparator<PairStatistics> comparator = Comparator
                 .comparingDouble(stats -> computeMetricValue(stats, metric));
@@ -36,12 +49,7 @@ final class AnalysisResultListFormatter {
         comparator = comparator.thenComparing(PairStatistics::firstIdentifier)
                 .thenComparing(PairStatistics::secondIdentifier);
         orderedStatistics.sort(comparator);
-
-        List<String> lines = new ArrayList<>(orderedStatistics.size());
-        for (PairStatistics stats : orderedStatistics) {
-            lines.add(formatLine(stats, metric));
-        }
-        return String.join(System.lineSeparator(), lines);
+        return orderedStatistics;
     }
 
     private static Map<PairKey, PairStatistics> initializeStatistics(
@@ -90,8 +98,9 @@ final class AnalysisResultListFormatter {
     }
 
     private static String formatLine(PairStatistics statistics, ListMetric metric) {
-        return statistics.firstIdentifier() + "-" + statistics.secondIdentifier() + ": "
-                + formatMetric(statistics, metric);
+        return FORMAT_STATISTICS.formatted(statistics.firstIdentifier(),
+                statistics.secondIdentifier(),
+                formatMetric(statistics, metric));
     }
 
     private static String formatMetric(PairStatistics statistics, ListMetric metric) {
@@ -105,7 +114,7 @@ final class AnalysisResultListFormatter {
     }
 
     private static String formatDecimal(double value) {
-        return String.format(Locale.ROOT, "%.2f", value);
+        return String.format(Locale.ROOT, DECIMAL_FORMAT_PATTERN, value);
     }
 
     private static String formatInteger(long value) {
@@ -132,45 +141,41 @@ final class AnalysisResultListFormatter {
             this.secondTextLength = secondTextLength;
         }
 
-        void addMatch(int length) {
+        private void addMatch(int length) {
             this.totalMatchLength += length;
             this.matchCount++;
-            if (length > this.maxMatchLength) {
-                this.maxMatchLength = length;
-            }
-            if (length < this.minMatchLength) {
-                this.minMatchLength = length;
-            }
+            this.maxMatchLength = Math.max(this.maxMatchLength, length);
+            this.minMatchLength = Math.min(this.minMatchLength, length);
         }
 
-        String firstIdentifier() {
+        private String firstIdentifier() {
             return this.firstIdentifier;
         }
 
-        String secondIdentifier() {
+        private String secondIdentifier() {
             return this.secondIdentifier;
         }
 
-        double averageLength() {
+        private double averageLength() {
             if (this.matchCount == 0) {
                 return 0.0d;
             }
             return (double) this.totalMatchLength / this.matchCount;
         }
 
-        int maxLength() {
+        private int maxLength() {
             return this.matchCount == 0 ? 0 : this.maxMatchLength;
         }
 
-        int minLength() {
+        private int minLength() {
             return this.matchCount == 0 ? 0 : this.minMatchLength;
         }
 
-        long totalMatchLength() {
+        private long totalMatchLength() {
             return this.totalMatchLength;
         }
 
-        int longerTextLength() {
+        private int longerTextLength() {
             return Math.max(this.firstTextLength, this.secondTextLength);
         }
     }
