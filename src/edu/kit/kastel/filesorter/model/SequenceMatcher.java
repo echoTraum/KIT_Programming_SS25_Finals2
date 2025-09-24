@@ -38,7 +38,7 @@ public class SequenceMatcher {
     private static final String ERROR_NO_ANALYSIS_RESULT = "No analysis result available.";
     private static final String ERROR_IDENTIFIER_NOT_ANALYZED = "Identifier '%s' was not part of the last analysis.";
     private static final String MESSAGE_CLEARED = "Cleared all texts.";
-    private static final String FORMAT_MATCH = "Match of length %d: %d - %d";
+    private static final String FORMAT_MATCH = "Match of length %d: %d-%d";
 
     private final Map<String, LoadedText> loadedTexts = new LinkedHashMap<>();
     private AnalysisResult lastAnalysisResult;
@@ -245,7 +245,7 @@ public class SequenceMatcher {
 
         List<String> lines = new ArrayList<>(relevantMatches.size());
         for (AnalysisMatch match : relevantMatches) {
-            lines.add(FORMAT_MATCH.formatted(match.length(), match.firstIndex(), match.secondIndex()));
+            lines.add(FORMAT_MATCH.formatted(match.length(), match.secondIndex(), match.firstIndex()));
         }
         return Result.success(String.join(System.lineSeparator(), lines));
     }
