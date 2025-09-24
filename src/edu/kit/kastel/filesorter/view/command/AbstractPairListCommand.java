@@ -73,12 +73,8 @@ abstract class AbstractPairListCommand implements Command<SequenceMatcher> {
 
     private String formatSummary(PairSummary summary) {
         double metricValue = this.metric.extract(summary);
-        return "%s ~ %s ~ metric=%s:%s ~ matches=%d ~ total=%d ~ longest=%d ~ average=%s ~ coverage_first=%s ~ coverage_second=%s"
-                .formatted(summary.firstIdentifier(), summary.secondIdentifier(), this.metric.displayName(),
-                        this.metric.format(metricValue), summary.matchCount(), summary.totalMatchLength(),
-                        summary.longestMatchLength(), NumberFormatUtil.formatDecimal(summary.averageMatchLength()),
-                        NumberFormatUtil.formatDecimal(summary.firstCoverage()),
-                        NumberFormatUtil.formatDecimal(summary.secondCoverage()));
+        return "%s-%s: %s".formatted(summary.firstIdentifier(), summary.secondIdentifier(),
+                this.metric.format(metricValue));
     }
 
     private static List<PairSummary> collectSummaries(AnalysisResult analysisResult) {
@@ -93,10 +89,10 @@ abstract class AbstractPairListCommand implements Command<SequenceMatcher> {
             for (int secondIndex = firstIndex + 1; secondIndex < identifiers.size(); secondIndex++) {
                 String firstIdentifier = identifiers.get(firstIndex);
                 String secondIdentifier = identifiers.get(secondIndex);
-                int firstTokens = tokenizedTexts.get(firstIdentifier).size();
-                int secondTokens = tokenizedTexts.get(secondIdentifier).size();
+                int firstTokenCount = tokenizedTexts.get(firstIdentifier).size();
+                int secondTokenCount = tokenizedTexts.get(secondIdentifier).size();
                 accumulators.put(new PairKey(firstIdentifier, secondIdentifier),
-                        new PairAccumulator(firstIdentifier, secondIdentifier, firstTokens, secondTokens));
+                        new PairAccumulator(firstIdentifier, secondIdentifier, firstTokenCount, secondTokenCount));
             }
         }
 
@@ -121,52 +117,26 @@ abstract class AbstractPairListCommand implements Command<SequenceMatcher> {
     private static final class PairAccumulator {
         private final String firstIdentifier;
         private final String secondIdentifier;
-        private final boolean[] firstCoverage;
-        private final boolean[] secondCoverage;
-        private int matchCount;
-        private int totalLength;
-        private int longestMatch;
+        private final int firstTokenCount;
+        private final int secondTokenCount;
+        private int totalMatchLength;
+        private int longestMatchLength;
 
-        PairAccumulator(String firstIdentifier, String secondIdentifier, int firstTokens, int secondTokens) {
+        PairAccumulator(String firstIdentifier, String secondIdentifier, int firstTokenCount, int secondTokenCount) {
             this.firstIdentifier = firstIdentifier;
             this.secondIdentifier = secondIdentifier;
-            this.firstCoverage = new boolean[firstTokens];
-            this.secondCoverage = new boolean[secondTokens];
+            this.firstTokenCount = firstTokenCount;
+            this.secondTokenCount = secondTokenCount;
         }
 
         void addMatch(AnalysisMatch match) {
-            this.matchCount++;
-            this.totalLength += match.length();
-            this.longestMatch = Math.max(this.longestMatch, match.length());
-            markCovered(this.firstCoverage, match.firstIndex(), match.length());
-            markCovered(this.secondCoverage, match.secondIndex(), match.length());
+            this.totalMatchLength += match.length();
+            this.longestMatchLength = Math.max(this.longestMatchLength, match.length());
         }
 
         PairSummary toSummary() {
-            return new PairSummary(this.firstIdentifier, this.secondIdentifier, this.matchCount, this.totalLength,
-                    this.longestMatch, coverageRatio(this.firstCoverage), coverageRatio(this.secondCoverage));
-        }
-
-        private static void markCovered(boolean[] coverage, int start, int length) {
-            for (int index = 0; index < length; index++) {
-                int position = start + index;
-                if (position >= 0 && position < coverage.length) {
-                    coverage[position] = true;
-                }
-            }
-        }
-
-        private static double coverageRatio(boolean[] coverage) {
-            if (coverage.length == 0) {
-                return 0;
-            }
-            int coveredTokens = 0;
-            for (boolean value : coverage) {
-                if (value) {
-                    coveredTokens++;
-                }
-            }
-            return (double) coveredTokens / coverage.length;
+            return new PairSummary(this.firstIdentifier, this.secondIdentifier, this.firstTokenCount,
+                    this.secondTokenCount, this.totalMatchLength, this.longestMatchLength);
         }
     }
 }

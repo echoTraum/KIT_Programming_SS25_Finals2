@@ -1,29 +1,23 @@
 package edu.kit.kastel.filesorter.view.command;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.Locale;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 /**
- * Utility class for formatting decimal numbers in command outputs.
+ * Utility class for formatting metric values in command outputs.
  */
 final class NumberFormatUtil {
 
-    private static final String DECIMAL_PATTERN = "0.###";
-    private static final DecimalFormatSymbols SYMBOLS = DecimalFormatSymbols.getInstance(Locale.ROOT);
+    private static final int PERCENT_SCALE = 2;
 
     private NumberFormatUtil() {
         // utility class
     }
 
-    /**
-     * Formats the provided value using a common decimal pattern.
-     *
-     * @param value the value to format
-     * @return the formatted value as string
-     */
-    static String formatDecimal(double value) {
-        DecimalFormat format = new DecimalFormat(DECIMAL_PATTERN, SYMBOLS);
-        return format.format(value);
+    static String formatPercentage(double ratio) {
+        BigDecimal percentValue = BigDecimal.valueOf(ratio)
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(PERCENT_SCALE, RoundingMode.HALF_UP);
+        return percentValue.toPlainString() + "%";
     }
 }

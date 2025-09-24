@@ -9,60 +9,38 @@ import java.util.function.ToDoubleFunction;
  */
 public enum ListMetric {
 
-    /** Metric based on the number of matches. */
-    MATCH_COUNT(PairSummary::matchCount, true),
+    /** Symmetric similarity: {@code 2m / (a + b)}. */
+    AVG(PairSummary::symmetricSimilarity, MetricValueType.PERCENTAGE),
 
-    /** Metric based on the sum of all match lengths. */
-    TOTAL_LENGTH(PairSummary::totalMatchLength, true),
+    /** Maximum similarity: {@code max(m / a, m / b)}. */
+    MAX(PairSummary::maximumSimilarity, MetricValueType.PERCENTAGE),
 
-    /** Metric based on the longest detected match. */
-    LONGEST_MATCH(PairSummary::longestMatchLength, true),
+    /** Minimum similarity: {@code min(m / a, m / b)}. */
+    MIN(PairSummary::minimumSimilarity, MetricValueType.PERCENTAGE),
 
-    /** Metric based on the average match length. */
-    AVERAGE_LENGTH(PairSummary::averageMatchLength, false),
+    /** Length of the longest match. */
+    LONG(summary -> summary.longestMatchLength(), MetricValueType.INTEGER),
 
-    /** Metric based on the coverage of the first text. */
-    FIRST_COVERAGE(PairSummary::firstCoverage, false),
-
-    /** Metric based on the coverage of the second text. */
-    SECOND_COVERAGE(PairSummary::secondCoverage, false),
-
-    /** Metric based on the average coverage of both texts. */
-    AVERAGE_COVERAGE(PairSummary::averageCoverage, false),
-
-    /** Metric based on the minimum coverage of both texts. */
-    MINIMUM_COVERAGE(PairSummary::minimumCoverage, false),
-
-    /** Metric based on the maximum coverage of both texts. */
-    MAXIMUM_COVERAGE(PairSummary::maximumCoverage, false);
+    /** Sum of the lengths of all matches. */
+    LEN(summary -> summary.totalMatchLength(), MetricValueType.INTEGER);
 
     private final ToDoubleFunction<PairSummary> extractor;
-    private final boolean integerMetric;
+    private final MetricValueType valueType;
 
-    ListMetric(ToDoubleFunction<PairSummary> extractor, boolean integerMetric) {
+    ListMetric(ToDoubleFunction<PairSummary> extractor, MetricValueType valueType) {
         this.extractor = extractor;
-        this.integerMetric = integerMetric;
+        this.valueType = valueType;
     }
 
     double extract(PairSummary summary) {
         return this.extractor.applyAsDouble(summary);
     }
 
-    /**
-     * Formats the provided value for presentation.
-     *
-     * @param value the value to format
-     * @return the formatted value
-     */
-    public String format(double value) {
-        if (this.integerMetric) {
-            return Long.toString(Math.round(value));
-        }
-        return NumberFormatUtil.formatDecimal(value);
-    }
-
-    String displayName() {
-        return name().toLowerCase(Locale.ROOT);
+    String format(double value) {
+        return switch (this.valueType) {
+            case INTEGER -> Long.toString(Math.round(value));
+            case PERCENTAGE -> NumberFormatUtil.formatPercentage(value);
+        };
     }
 
     /**
@@ -73,21 +51,19 @@ public enum ListMetric {
      */
     public static ListMetric fromString(String value) {
         Objects.requireNonNull(value);
-        String normalized = value.trim().toUpperCase(Locale.ROOT)
-                .replace('-', '_')
-                .replace(' ', '_');
-
+        String normalized = value.trim().toUpperCase(Locale.ROOT);
         return switch (normalized) {
-            case "MATCH_COUNT", "MATCHES", "COUNT" -> MATCH_COUNT;
-            case "TOTAL_LENGTH", "TOTAL", "SUM", "SUM_LENGTH" -> TOTAL_LENGTH;
-            case "LONGEST_MATCH", "LONGEST", "MAX", "MAX_LENGTH" -> LONGEST_MATCH;
-            case "AVERAGE_LENGTH", "AVERAGE", "AVG", "MEAN_LENGTH" -> AVERAGE_LENGTH;
-            case "FIRST_COVERAGE", "COVERAGE_FIRST", "FIRST" -> FIRST_COVERAGE;
-            case "SECOND_COVERAGE", "COVERAGE_SECOND", "SECOND" -> SECOND_COVERAGE;
-            case "AVERAGE_COVERAGE", "COVERAGE_AVERAGE", "MEAN_COVERAGE", "OVERLAP" -> AVERAGE_COVERAGE;
-            case "MINIMUM_COVERAGE", "MIN_COVERAGE", "COVERAGE_MIN" -> MINIMUM_COVERAGE;
-            case "MAXIMUM_COVERAGE", "MAX_COVERAGE", "COVERAGE_MAX" -> MAXIMUM_COVERAGE;
+            case "AVG", "AVERAGE" -> AVG;
+            case "MAX", "MAXIMUM" -> MAX;
+            case "MIN", "MINIMUM" -> MIN;
+            case "LONG", "LONGEST" -> LONG;
+            case "LEN", "LENGTH" -> LEN;
             default -> null;
         };
+    }
+
+    private enum MetricValueType {
+        INTEGER,
+        PERCENTAGE
     }
 }
