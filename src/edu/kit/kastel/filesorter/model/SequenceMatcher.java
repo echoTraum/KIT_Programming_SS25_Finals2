@@ -39,7 +39,6 @@ public class SequenceMatcher {
     private static final String ERROR_IDENTIFIER_NOT_ANALYZED = "Identifier '%s' was not part of the last analysis.";
     private static final String MESSAGE_CLEARED = "Cleared all texts.";
     private static final String FORMAT_MATCH = "Match of length %d: %d-%d";
-    private static final String ERROR_INVALID_IDENTIFIER_MESSAGE = "Match does not involve provided identifiers.";
 
     private final Map<String, LoadedText> loadedTexts = new LinkedHashMap<>();
     private AnalysisResult lastAnalysisResult;
@@ -241,16 +240,41 @@ public class SequenceMatcher {
         }
 
         relevantMatches.sort(Comparator.comparingInt(AnalysisMatch::length).reversed()
-                .thenComparingInt(match -> searchIndexFor(match, firstIdentifier, secondIdentifier))
-                .thenComparingInt(match -> patternIndexFor(match, firstIdentifier, secondIdentifier)));
+                .thenComparingInt(AnalysisMatch::firstIndex)
+                .thenComparingInt(AnalysisMatch::secondIndex));
 
         List<String> lines = new ArrayList<>(relevantMatches.size());
         for (AnalysisMatch match : relevantMatches) {
-            int searchIndex = searchIndexFor(match, firstIdentifier, secondIdentifier);
-            int patternIndex = patternIndexFor(match, firstIdentifier, secondIdentifier);
-            lines.add(FORMAT_MATCH.formatted(match.length(), searchIndex, patternIndex));
+            lines.add(FORMAT_MATCH.formatted(match.length(), match.secondIndex(), match.firstIndex()));
         }
         return Result.success(String.join(System.lineSeparator(), lines));
+    }
+
+    /**
+     * Opens an editor for the specified pair of identifiers.
+     *
+     * @param firstIdentifier the identifier of the first text
+     * @param secondIdentifier the identifier of the second text
+     * @return an editor capable of modifying the matches between the texts
+     * @throws ComparisonEditingException if editing is currently not possible
+     */
+    public ComparisonEditor openEditor(String firstIdentifier, String secondIdentifier)
+            throws ComparisonEditingException {
+        if (this.lastAnalysisResult == null) {
+            throw new ComparisonEditingException(ERROR_NO_ANALYSIS_RESULT);
+        }
+
+        Map<String, List<String>> tokenizedTexts = this.lastAnalysisResult.tokenizedTexts();
+        Result validation = validateIdentifierForMatches(firstIdentifier, tokenizedTexts);
+        if (validation != null) {
+            throw new ComparisonEditingException(validation.getMessage());
+        }
+        validation = validateIdentifierForMatches(secondIdentifier, tokenizedTexts);
+        if (validation != null) {
+            throw new ComparisonEditingException(validation.getMessage());
+        }
+
+        return new ComparisonEditor(this, this.lastAnalysisResult, firstIdentifier, secondIdentifier);
     }
 
     private Result validateIdentifierForMatches(String identifier, Map<String, List<String>> tokenizedTexts) {
@@ -263,47 +287,30 @@ public class SequenceMatcher {
         return null;
     }
 
-    private static boolean matchInvolvesIdentifiers(AnalysisMatch match, String firstIdentifier,
+    static boolean matchInvolvesIdentifiers(AnalysisMatch match, String firstIdentifier,
             String secondIdentifier) {
         return (match.firstIdentifier().equals(firstIdentifier) && match.secondIdentifier().equals(secondIdentifier))
                 || (match.firstIdentifier().equals(secondIdentifier)
                         && match.secondIdentifier().equals(firstIdentifier));
     }
 
-    /**
-     * Determines the index of the match within the search text.
-     *
-     * @param match the match to inspect
-     * @param patternIdentifier the identifier of the pattern text
-     * @param searchIdentifier the identifier of the search text
-     * @return the index of the match within the search text
-     */
-    private static int searchIndexFor(AnalysisMatch match, String patternIdentifier, String searchIdentifier) {
-        if (match.firstIdentifier().equals(patternIdentifier) && match.secondIdentifier().equals(searchIdentifier)) {
-            return match.secondIndex();
+    void replaceMatchesForPair(String firstIdentifier, String secondIdentifier, List<AnalysisMatch> replacements) {
+        if (this.lastAnalysisResult == null) {
+            return;
         }
-        if (match.firstIdentifier().equals(searchIdentifier) && match.secondIdentifier().equals(patternIdentifier)) {
-            return match.firstIndex();
+        List<AnalysisMatch> updated = new ArrayList<>();
+        for (AnalysisMatch match : this.lastAnalysisResult.matches()) {
+            if (!matchInvolvesIdentifiers(match, firstIdentifier, secondIdentifier)) {
+                updated.add(match);
+            }
         }
-        throw new IllegalArgumentException(ERROR_INVALID_IDENTIFIER_MESSAGE);
-    }
+        List<AnalysisMatch> orderedReplacements = new ArrayList<>(replacements);
+        orderedReplacements.sort(Comparator.comparingInt(AnalysisMatch::firstIndex)
+                .thenComparingInt(AnalysisMatch::secondIndex));
+        updated.addAll(orderedReplacements);
 
-    /**
-     * Determines the index of the match within the pattern text.
-     *
-     * @param match the match to inspect
-     * @param patternIdentifier the identifier of the pattern text
-     * @param searchIdentifier the identifier of the search text
-     * @return the index of the match within the pattern text
-     */
-    private static int patternIndexFor(AnalysisMatch match, String patternIdentifier, String searchIdentifier) {
-        if (match.firstIdentifier().equals(patternIdentifier) && match.secondIdentifier().equals(searchIdentifier)) {
-            return match.firstIndex();
-        }
-        if (match.firstIdentifier().equals(searchIdentifier) && match.secondIdentifier().equals(patternIdentifier)) {
-            return match.secondIndex();
-        }
-        throw new IllegalArgumentException(ERROR_INVALID_IDENTIFIER_MESSAGE);
+        this.lastAnalysisResult = new AnalysisResult(this.lastAnalysisResult.strategy(),
+                this.lastAnalysisResult.minMatchLength(), this.lastAnalysisResult.tokenizedTexts(), updated);
     }
 
     private static List<AnalysisMatch> collectMatches(Map<String, List<String>> tokenizedTexts, int minMatchLength) {
