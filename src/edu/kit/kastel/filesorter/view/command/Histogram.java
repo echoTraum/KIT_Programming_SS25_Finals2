@@ -51,7 +51,7 @@ public class Histogram implements Command<SequenceMatcher> {
 
         StringBuilder builder = new StringBuilder();
         for (int bucket = CLASS_COUNT - 1; bucket >= 0; bucket--) {
-            if (builder.length() > 0) {
+            if (!builder.isEmpty()) {
                 builder.append(System.lineSeparator());
             }
             int count = buckets[bucket];
