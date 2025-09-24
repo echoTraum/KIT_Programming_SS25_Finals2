@@ -51,10 +51,18 @@ public enum ModelKeyword implements Keyword<SequenceMatcher> {
     /**
      * Keyword for the {@link List} command.
      */
-    LIST(List::fromArguments);
+    LIST(arguments -> new List(parseListMetric(arguments), parseSortOrder(arguments))),
+
+    /**
+     * Keyword for the {@link Top} command.
+     */
+    TOP(arguments -> new Top(arguments.parsePositive(), parseListMetric(arguments),
+            parseSortOrder(arguments)));
 
     private static final String ERROR_INVALID_PATH = "invalid path";
     private static final String ERROR_INVALID_STRATEGY = "invalid strategy";
+    private static final String ERROR_INVALID_METRIC = "invalid metric";
+    private static final String ERROR_INVALID_ORDER = "invalid order";
     private static final String VALUE_NAME_DELIMITER = "_";
     private final CommandProvider<SequenceMatcher> provider;
 
@@ -108,5 +116,27 @@ public enum ModelKeyword implements Keyword<SequenceMatcher> {
             throw new InvalidArgumentException(ERROR_INVALID_STRATEGY);
         }
         return strategy;
+    }
+
+    private static ListMetric parseListMetric(Arguments arguments) throws InvalidArgumentException {
+        String metricArgument = arguments.parseString();
+        ListMetric metric = ListMetric.fromString(metricArgument);
+        if (metric == null) {
+            throw new InvalidArgumentException(ERROR_INVALID_METRIC);
+        }
+        return metric;
+    }
+
+    private static SortOrder parseSortOrder(Arguments arguments)
+            throws InvalidArgumentException {
+        if (arguments.isExhausted()) {
+            return SortOrder.DESCENDING;
+        }
+        String orderArgument = arguments.parseString();
+        SortOrder order = SortOrder.fromString(orderArgument);
+        if (order == null) {
+            throw new InvalidArgumentException(ERROR_INVALID_ORDER);
+        }
+        return order;
     }
 }
