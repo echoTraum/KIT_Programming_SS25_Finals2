@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,9 @@ public class SequenceMatcher {
     private static final String ERROR_INVALID_MIN_MATCH_LENGTH = "Minimum match length must be positive.";
     private static final String MESSAGE_ANALYSIS_TOOK = "Analysis took %dms";
     private static final String ERROR_NO_ANALYSIS_RESULT = "No analysis result available.";
+    private static final String ERROR_IDENTIFIER_NOT_ANALYZED = "Identifier '%s' was not part of the last analysis.";
     private static final String MESSAGE_CLEARED = "Cleared all texts.";
+    private static final String FORMAT_MATCH = "Match of length %d: %d - %d";
 
     private final Map<String, LoadedText> loadedTexts = new LinkedHashMap<>();
     private AnalysisResult lastAnalysisResult;
@@ -198,6 +201,70 @@ public class SequenceMatcher {
 
         return Result.success(AnalysisResultListFormatter
                 .format(this.lastAnalysisResult, metric, order));
+    }
+
+    /**
+     * Lists all matches from the last analysis for the specified pair of identifiers.
+     *
+     * @param firstIdentifier the identifier of the first text
+     * @param secondIdentifier the identifier of the second text
+     * @return the formatted matches or an error if the request cannot be fulfilled
+     */
+    public Result matches(String firstIdentifier, String secondIdentifier) {
+        if (firstIdentifier == null || secondIdentifier == null) {
+            return Result.error(ERROR_MISSING_IDENTIFIER);
+        }
+        if (this.lastAnalysisResult == null) {
+            return Result.error(ERROR_NO_ANALYSIS_RESULT);
+        }
+
+        Map<String, List<String>> tokenizedTexts = this.lastAnalysisResult.tokenizedTexts();
+        Result identifierValidation = validateIdentifierForMatches(firstIdentifier, tokenizedTexts);
+        if (identifierValidation != null) {
+            return identifierValidation;
+        }
+        identifierValidation = validateIdentifierForMatches(secondIdentifier, tokenizedTexts);
+        if (identifierValidation != null) {
+            return identifierValidation;
+        }
+
+        List<AnalysisMatch> relevantMatches = new ArrayList<>();
+        for (AnalysisMatch match : this.lastAnalysisResult.matches()) {
+            if (matchInvolvesIdentifiers(match, firstIdentifier, secondIdentifier)) {
+                relevantMatches.add(match);
+            }
+        }
+
+        if (relevantMatches.isEmpty()) {
+            return Result.success();
+        }
+
+        relevantMatches.sort(Comparator.comparingInt(AnalysisMatch::length).reversed()
+                .thenComparingInt(AnalysisMatch::firstIndex)
+                .thenComparingInt(AnalysisMatch::secondIndex));
+
+        List<String> lines = new ArrayList<>(relevantMatches.size());
+        for (AnalysisMatch match : relevantMatches) {
+            lines.add(FORMAT_MATCH.formatted(match.length(), match.firstIndex(), match.secondIndex()));
+        }
+        return Result.success(String.join(System.lineSeparator(), lines));
+    }
+
+    private Result validateIdentifierForMatches(String identifier, Map<String, List<String>> tokenizedTexts) {
+        if (!tokenizedTexts.containsKey(identifier)) {
+            if (this.loadedTexts.containsKey(identifier)) {
+                return Result.error(ERROR_IDENTIFIER_NOT_ANALYZED.formatted(identifier));
+            }
+            return Result.error(ERROR_UNKNOWN_IDENTIFIER.formatted(identifier));
+        }
+        return null;
+    }
+
+    private static boolean matchInvolvesIdentifiers(AnalysisMatch match, String firstIdentifier,
+            String secondIdentifier) {
+        return (match.firstIdentifier().equals(firstIdentifier) && match.secondIdentifier().equals(secondIdentifier))
+                || (match.firstIdentifier().equals(secondIdentifier)
+                        && match.secondIdentifier().equals(firstIdentifier));
     }
 
     private static List<AnalysisMatch> collectMatches(Map<String, List<String>> tokenizedTexts, int minMatchLength) {
