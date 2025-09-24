@@ -250,6 +250,33 @@ public class SequenceMatcher {
         return Result.success(String.join(System.lineSeparator(), lines));
     }
 
+    /**
+     * Opens an editor for the specified pair of identifiers.
+     *
+     * @param firstIdentifier the identifier of the first text
+     * @param secondIdentifier the identifier of the second text
+     * @return an editor capable of modifying the matches between the texts
+     * @throws ComparisonEditingException if editing is currently not possible
+     */
+    public ComparisonEditor openEditor(String firstIdentifier, String secondIdentifier)
+            throws ComparisonEditingException {
+        if (this.lastAnalysisResult == null) {
+            throw new ComparisonEditingException(ERROR_NO_ANALYSIS_RESULT);
+        }
+
+        Map<String, List<String>> tokenizedTexts = this.lastAnalysisResult.tokenizedTexts();
+        Result validation = validateIdentifierForMatches(firstIdentifier, tokenizedTexts);
+        if (validation != null) {
+            throw new ComparisonEditingException(validation.getMessage());
+        }
+        validation = validateIdentifierForMatches(secondIdentifier, tokenizedTexts);
+        if (validation != null) {
+            throw new ComparisonEditingException(validation.getMessage());
+        }
+
+        return new ComparisonEditor(this, this.lastAnalysisResult, firstIdentifier, secondIdentifier);
+    }
+
     private Result validateIdentifierForMatches(String identifier, Map<String, List<String>> tokenizedTexts) {
         if (!tokenizedTexts.containsKey(identifier)) {
             if (this.loadedTexts.containsKey(identifier)) {
@@ -260,11 +287,30 @@ public class SequenceMatcher {
         return null;
     }
 
-    private static boolean matchInvolvesIdentifiers(AnalysisMatch match, String firstIdentifier,
+    static boolean matchInvolvesIdentifiers(AnalysisMatch match, String firstIdentifier,
             String secondIdentifier) {
         return (match.firstIdentifier().equals(firstIdentifier) && match.secondIdentifier().equals(secondIdentifier))
                 || (match.firstIdentifier().equals(secondIdentifier)
                         && match.secondIdentifier().equals(firstIdentifier));
+    }
+
+    void replaceMatchesForPair(String firstIdentifier, String secondIdentifier, List<AnalysisMatch> replacements) {
+        if (this.lastAnalysisResult == null) {
+            return;
+        }
+        List<AnalysisMatch> updated = new ArrayList<>();
+        for (AnalysisMatch match : this.lastAnalysisResult.matches()) {
+            if (!matchInvolvesIdentifiers(match, firstIdentifier, secondIdentifier)) {
+                updated.add(match);
+            }
+        }
+        List<AnalysisMatch> orderedReplacements = new ArrayList<>(replacements);
+        orderedReplacements.sort(Comparator.comparingInt(AnalysisMatch::firstIndex)
+                .thenComparingInt(AnalysisMatch::secondIndex));
+        updated.addAll(orderedReplacements);
+
+        this.lastAnalysisResult = new AnalysisResult(this.lastAnalysisResult.strategy(),
+                this.lastAnalysisResult.minMatchLength(), this.lastAnalysisResult.tokenizedTexts(), updated);
     }
 
     private static List<AnalysisMatch> collectMatches(Map<String, List<String>> tokenizedTexts, int minMatchLength) {

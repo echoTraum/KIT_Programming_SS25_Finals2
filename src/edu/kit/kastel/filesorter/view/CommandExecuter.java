@@ -39,6 +39,7 @@ public class CommandExecuter<M, K extends Enum<K> & Keyword<M>> {
     private final PrintStream errorStream;
     private M model;
     private boolean isRunning;
+    private EditingController editingController;
 
     /**
      * Constructs a new command executer using the provided input source and output streams when interacting.
@@ -62,7 +63,16 @@ public class CommandExecuter<M, K extends Enum<K> & Keyword<M>> {
      * @return the default stream of this executer
      */
     public PrintStream getDefaultStream() {
-        return defaultStream;
+        return this.defaultStream;
+    }
+
+    /**
+     * Returns the error stream that this executer uses for reporting problems.
+     *
+     * @return the error stream of this executer
+     */
+    public PrintStream getErrorStream() {
+        return this.errorStream;
     }
 
     /**
@@ -103,6 +113,15 @@ public class CommandExecuter<M, K extends Enum<K> & Keyword<M>> {
 
     private void handleLine(String line) {
         String[] splittedLine = line.split(COMMAND_SEPARATOR, -1);
+        if (this.editingController != null) {
+            if (!findAndHandleCommand(this.viewKeywords, this, splittedLine)) {
+                return;
+            }
+            if (!this.editingController.handleCommand(splittedLine)) {
+                this.errorStream.println(ERROR_UNKNOWN_COMMAND);
+            }
+            return;
+        }
         if (findAndHandleCommand(this.viewKeywords, this, splittedLine)
                 && findAndHandleCommand(this.modelKeywords, this.model, splittedLine)) {
             this.errorStream.println(ERROR_UNKNOWN_COMMAND);
@@ -139,7 +158,15 @@ public class CommandExecuter<M, K extends Enum<K> & Keyword<M>> {
             return;
         }
 
-        handleResult(providedCommand.execute(value));
+        Result result;
+        if (providedCommand instanceof ExecuterCommand<?> executerCommand) {
+            @SuppressWarnings("unchecked")
+            ExecuterCommand<S> typedCommand = (ExecuterCommand<S>) executerCommand;
+            result = typedCommand.execute(value, this);
+        } else {
+            result = providedCommand.execute(value);
+        }
+        handleResult(result);
     }
 
     private void handleResult(Result result) {
@@ -161,5 +188,22 @@ public class CommandExecuter<M, K extends Enum<K> & Keyword<M>> {
             }
         }
         return null;
+    }
+
+    /**
+     * Activates a specialised editing mode handled by the provided controller.
+     *
+     * @param controller the controller managing the editing interaction
+     */
+    public void enterEditingMode(EditingController controller) {
+        this.editingController = controller;
+        controller.onEnter();
+    }
+
+    /**
+     * Leaves the currently active editing mode, if any.
+     */
+    public void exitEditingMode() {
+        this.editingController = null;
     }
 }
