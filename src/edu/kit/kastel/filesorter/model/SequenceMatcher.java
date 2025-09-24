@@ -39,6 +39,7 @@ public class SequenceMatcher {
     private static final String ERROR_IDENTIFIER_NOT_ANALYZED = "Identifier '%s' was not part of the last analysis.";
     private static final String MESSAGE_CLEARED = "Cleared all texts.";
     private static final String FORMAT_MATCH = "Match of length %d: %d-%d";
+    private static final String ERROR_INVALID_IDENTIFIER_MESSAGE = "Match does not involve provided identifiers.";
 
     private final Map<String, LoadedText> loadedTexts = new LinkedHashMap<>();
     private AnalysisResult lastAnalysisResult;
@@ -276,7 +277,7 @@ public class SequenceMatcher {
         if (match.firstIdentifier().equals(patternIdentifier) && match.secondIdentifier().equals(searchIdentifier)) {
             return match.secondIndex();
         }
-        throw new IllegalArgumentException("Match does not involve provided identifiers.");
+        throw new IllegalArgumentException(ERROR_INVALID_IDENTIFIER_MESSAGE);
     }
 
     private static int patternIndexFor(AnalysisMatch match, String searchIdentifier, String patternIdentifier) {
@@ -286,7 +287,7 @@ public class SequenceMatcher {
         if (match.firstIdentifier().equals(patternIdentifier) && match.secondIdentifier().equals(searchIdentifier)) {
             return match.firstIndex();
         }
-        throw new IllegalArgumentException("Match does not involve provided identifiers.");
+        throw new IllegalArgumentException(ERROR_INVALID_IDENTIFIER_MESSAGE);
     }
 
     private static List<AnalysisMatch> collectMatches(Map<String, List<String>> tokenizedTexts, int minMatchLength) {

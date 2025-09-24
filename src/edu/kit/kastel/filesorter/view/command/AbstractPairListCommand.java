@@ -85,7 +85,7 @@ abstract class AbstractPairListCommand implements Command<SequenceMatcher> {
     private String formatSummary(PairSummary summary) {
         double metricValue = this.metric.extract(summary);
         PairIdentifiers identifiers = determineDisplayOrder(summary);
-        return "%s-%s: %s".formatted(identifiers.secondIdentifier(), identifiers.firstIdentifier(),
+        return "%s-%s: %s".formatted(identifiers.firstIdentifier(), identifiers.secondIdentifier(),
                 this.metric.format(metricValue));
     }
 
@@ -134,8 +134,7 @@ abstract class AbstractPairListCommand implements Command<SequenceMatcher> {
     private static PairIdentifiers orientBySimilarity(PairSummary summary, boolean preferLargerFirst) {
         double firstSimilarity = summary.similarityToFirst();
         double secondSimilarity = summary.similarityToSecond();
-        if ((preferLargerFirst && secondSimilarity > firstSimilarity)
-                || (!preferLargerFirst && secondSimilarity < firstSimilarity)) {
+        if (preferLargerFirst || secondSimilarity < firstSimilarity) {
             return new PairIdentifiers(summary.secondIdentifier(), summary.firstIdentifier());
         }
         return new PairIdentifiers(summary.firstIdentifier(), summary.secondIdentifier());
