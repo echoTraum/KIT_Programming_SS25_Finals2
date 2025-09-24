@@ -15,6 +15,8 @@ import java.util.OptionalInt;
 
 /**
  * Base class shared by commands that list program pairs after an analysis.
+ *
+ * @author ugsrv
  */
 abstract class AbstractPairListCommand implements Command<SequenceMatcher> {
 

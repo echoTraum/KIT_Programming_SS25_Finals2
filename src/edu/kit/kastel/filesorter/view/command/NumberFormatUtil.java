@@ -5,6 +5,8 @@ import java.math.RoundingMode;
 
 /**
  * Utility class for formatting metric values in command outputs.
+ *
+ * @author ugsrv
  */
 final class NumberFormatUtil {
 

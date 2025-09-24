@@ -4,8 +4,10 @@ import java.util.OptionalInt;
 
 /**
  * Command that lists all program pairs ordered by a configurable metric.
+ *
+ * @author ugsrv
  */
-public class ListCommand extends AbstractPairListCommand {
+public class List extends AbstractPairListCommand {
 
     /**
      * Creates a new command instance.
@@ -13,7 +15,7 @@ public class ListCommand extends AbstractPairListCommand {
      * @param metric the metric to use for ordering
      * @param order the order in which the results should be listed
      */
-    public ListCommand(ListMetric metric, SortOrder order) {
+    public List(ListMetric metric, SortOrder order) {
         super(metric, order, OptionalInt.empty());
     }
 

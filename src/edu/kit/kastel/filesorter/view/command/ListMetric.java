@@ -6,6 +6,8 @@ import java.util.function.ToDoubleFunction;
 
 /**
  * Enumeration of metrics that can be used to compare program pairs when listing results.
+ *
+ * @author ugsrv
  */
 public enum ListMetric {
 
@@ -19,10 +21,10 @@ public enum ListMetric {
     MIN(PairSummary::minimumSimilarity, MetricValueType.PERCENTAGE),
 
     /** Length of the longest match. */
-    LONG(summary -> summary.longestMatchLength(), MetricValueType.INTEGER),
+    LONG(PairSummary::longestMatchLength, MetricValueType.INTEGER),
 
     /** Sum of the lengths of all matches. */
-    LEN(summary -> summary.totalMatchLength(), MetricValueType.INTEGER);
+    LEN(PairSummary::totalMatchLength, MetricValueType.INTEGER);
 
     private final ToDoubleFunction<PairSummary> extractor;
     private final MetricValueType valueType;

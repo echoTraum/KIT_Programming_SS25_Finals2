@@ -9,6 +9,8 @@ package edu.kit.kastel.filesorter.view.command;
  * @param secondTokenCount the number of tokens of the second text
  * @param totalMatchLength the sum of the lengths of all matches
  * @param longestMatchLength the length of the longest match
+ *
+ * @author ugsrv
  */
 record PairSummary(String firstIdentifier, String secondIdentifier,
                    int firstTokenCount, int secondTokenCount,

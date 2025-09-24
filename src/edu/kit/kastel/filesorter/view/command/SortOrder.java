@@ -5,6 +5,8 @@ import java.util.Objects;
 
 /**
  * Enumeration describing the possible sort orders for list based commands.
+ *
+ * @author ugsrv
  */
 public enum SortOrder {
     /** Sorts results in ascending order. */
