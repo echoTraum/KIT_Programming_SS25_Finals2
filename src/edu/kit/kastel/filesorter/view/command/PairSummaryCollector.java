@@ -71,12 +71,12 @@ final class PairSummaryCollector {
             this.secondTokenCount = secondTokenCount;
         }
 
-        void addMatch(AnalysisMatch match) {
+        private void addMatch(AnalysisMatch match) {
             this.totalMatchLength += match.length();
             this.longestMatchLength = Math.max(this.longestMatchLength, match.length());
         }
 
-        PairSummary toSummary() {
+        private PairSummary toSummary() {
             return new PairSummary(this.firstIdentifier, this.secondIdentifier, this.firstTokenCount,
                     this.secondTokenCount, this.totalMatchLength, this.longestMatchLength);
         }

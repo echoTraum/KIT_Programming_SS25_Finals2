@@ -55,7 +55,7 @@ public class Histogram implements Command<SequenceMatcher> {
                 builder.append(System.lineSeparator());
             }
             int count = buckets[bucket];
-            builder.append(':').append("|".repeat(count)).append(' ').append(count);
+            builder.append(":%s %d".formatted("|".repeat(count), count));
         }
         return Result.success(builder.toString());
     }
