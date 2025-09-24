@@ -229,6 +229,8 @@ public class SequenceMatcher {
             return identifierValidation;
         }
 
+        IdentifierOrder identifierOrder = IdentifierOrder.of(firstIdentifier, secondIdentifier);
+
         List<AnalysisMatch> relevantMatches = new ArrayList<>();
         for (AnalysisMatch match : this.lastAnalysisResult.matches()) {
             if (matchInvolvesIdentifiers(match, firstIdentifier, secondIdentifier)) {
@@ -241,16 +243,29 @@ public class SequenceMatcher {
         }
 
         relevantMatches.sort(Comparator.comparingInt(AnalysisMatch::length).reversed()
-                .thenComparingInt(match -> searchIndexFor(match, firstIdentifier, secondIdentifier))
-                .thenComparingInt(match -> patternIndexFor(match, firstIdentifier, secondIdentifier)));
+                .thenComparingInt(
+                        match -> searchIndexFor(match, identifierOrder.firstIdentifier(), identifierOrder.secondIdentifier()))
+                .thenComparingInt(
+                        match -> patternIndexFor(match, identifierOrder.firstIdentifier(), identifierOrder.secondIdentifier())));
 
         List<String> lines = new ArrayList<>(relevantMatches.size());
         for (AnalysisMatch match : relevantMatches) {
-            int searchIndex = searchIndexFor(match, firstIdentifier, secondIdentifier);
-            int patternIndex = patternIndexFor(match, firstIdentifier, secondIdentifier);
+            int searchIndex = searchIndexFor(match, identifierOrder.firstIdentifier(), identifierOrder.secondIdentifier());
+            int patternIndex = patternIndexFor(match, identifierOrder.firstIdentifier(), identifierOrder.secondIdentifier());
             lines.add(FORMAT_MATCH.formatted(match.length(), searchIndex, patternIndex));
         }
         return Result.success(String.join(System.lineSeparator(), lines));
+    }
+
+    private record IdentifierOrder(String firstIdentifier, String secondIdentifier) {
+
+        private static IdentifierOrder of(String firstIdentifier, String secondIdentifier) {
+            if (firstIdentifier == null || secondIdentifier == null
+                    || firstIdentifier.compareTo(secondIdentifier) >= 0) {
+                return new IdentifierOrder(firstIdentifier, secondIdentifier);
+            }
+            return new IdentifierOrder(secondIdentifier, firstIdentifier);
+        }
     }
 
     private Result validateIdentifierForMatches(String identifier, Map<String, List<String>> tokenizedTexts) {
