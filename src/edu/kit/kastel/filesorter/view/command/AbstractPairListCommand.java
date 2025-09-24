@@ -45,6 +45,13 @@ abstract class AbstractPairListCommand implements Command<SequenceMatcher> {
             return Result.success(MESSAGE_NO_PROGRAM_PAIRS);
         }
 
+        Comparator<PairSummary> comparator = getPairSummaryComparator();
+
+        summaries.sort(comparator);
+        return Result.success(formatSummaries(summaries));
+    }
+
+    private Comparator<PairSummary> getPairSummaryComparator() {
         Comparator<PairSummary> comparator = Comparator.comparingDouble(this.metric::extract);
         if (this.order == SortOrder.DESCENDING) {
             comparator = comparator.reversed();
@@ -55,9 +62,7 @@ abstract class AbstractPairListCommand implements Command<SequenceMatcher> {
                 summary -> determineDisplayOrder(summary).secondIdentifier());
         comparator = comparator.thenComparing(firstIdentifierComparator)
                 .thenComparing(secondIdentifierComparator);
-
-        summaries.sort(comparator);
-        return Result.success(formatSummaries(summaries));
+        return comparator;
     }
 
     private String formatSummaries(List<PairSummary> summaries) {
@@ -80,7 +85,7 @@ abstract class AbstractPairListCommand implements Command<SequenceMatcher> {
     private String formatSummary(PairSummary summary) {
         double metricValue = this.metric.extract(summary);
         PairIdentifiers identifiers = determineDisplayOrder(summary);
-        return "%s-%s: %s".formatted(identifiers.firstIdentifier(), identifiers.secondIdentifier(),
+        return "%s-%s: %s".formatted(identifiers.secondIdentifier(), identifiers.firstIdentifier(),
                 this.metric.format(metricValue));
     }
 
