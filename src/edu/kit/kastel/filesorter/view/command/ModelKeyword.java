@@ -44,6 +44,11 @@ public enum ModelKeyword implements Keyword<SequenceMatcher> {
     ANALYZE(arguments -> new Analyze(parseTokenizationStrategy(arguments), arguments.parsePositive())),
 
     /**
+     * Keyword for the {@link Matches} command.
+     */
+    MATCHES(arguments -> new Matches(arguments.parseString(), arguments.parseString())),
+
+    /**
      * Keyword for the {@link List} command.
      */
     LIST(arguments -> new List(parseListMetric(arguments), parseSortOrder(arguments))),
