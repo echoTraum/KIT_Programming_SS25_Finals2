@@ -10,6 +10,8 @@ import java.util.Map;
 
 /**
  * Utility responsible for collecting {@link PairSummary} instances for an analysis result.
+ *
+ * @author ugsrv
  */
 final class PairSummaryCollector {
 

@@ -9,6 +9,8 @@ import java.util.List;
 
 /**
  * Command that prints a histogram over similarity scores of the last analysis.
+ *
+ * @author ugsrv
  */
 public class Histogram implements Command<SequenceMatcher> {
 
