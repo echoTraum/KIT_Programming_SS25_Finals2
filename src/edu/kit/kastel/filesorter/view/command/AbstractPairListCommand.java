@@ -49,8 +49,12 @@ abstract class AbstractPairListCommand implements Command<SequenceMatcher> {
         if (this.order == SortOrder.DESCENDING) {
             comparator = comparator.reversed();
         }
-        comparator = comparator.thenComparing(PairSummary::firstIdentifier)
-                .thenComparing(PairSummary::secondIdentifier);
+        Comparator<PairSummary> firstIdentifierComparator = Comparator.comparing(
+                summary -> determineDisplayOrder(summary).firstIdentifier());
+        Comparator<PairSummary> secondIdentifierComparator = Comparator.comparing(
+                summary -> determineDisplayOrder(summary).secondIdentifier());
+        comparator = comparator.thenComparing(firstIdentifierComparator)
+                .thenComparing(secondIdentifierComparator);
 
         summaries.sort(comparator);
         return Result.success(formatSummaries(summaries));
@@ -75,7 +79,8 @@ abstract class AbstractPairListCommand implements Command<SequenceMatcher> {
 
     private String formatSummary(PairSummary summary) {
         double metricValue = this.metric.extract(summary);
-        return "%s-%s: %s".formatted(summary.firstIdentifier(), summary.secondIdentifier(),
+        PairIdentifiers identifiers = determineDisplayOrder(summary);
+        return "%s-%s: %s".formatted(identifiers.firstIdentifier(), identifiers.secondIdentifier(),
                 this.metric.format(metricValue));
     }
 
@@ -113,6 +118,24 @@ abstract class AbstractPairListCommand implements Command<SequenceMatcher> {
         return summaries;
     }
 
+    private PairIdentifiers determineDisplayOrder(PairSummary summary) {
+        return switch (this.metric) {
+            case MAX -> orientBySimilarity(summary, true);
+            case MIN -> orientBySimilarity(summary, false);
+            default -> new PairIdentifiers(summary.firstIdentifier(), summary.secondIdentifier());
+        };
+    }
+
+    private static PairIdentifiers orientBySimilarity(PairSummary summary, boolean preferLargerFirst) {
+        double firstSimilarity = summary.similarityToFirst();
+        double secondSimilarity = summary.similarityToSecond();
+        if ((preferLargerFirst && secondSimilarity > firstSimilarity)
+                || (!preferLargerFirst && secondSimilarity < firstSimilarity)) {
+            return new PairIdentifiers(summary.secondIdentifier(), summary.firstIdentifier());
+        }
+        return new PairIdentifiers(summary.firstIdentifier(), summary.secondIdentifier());
+    }
+
     private record PairKey(String firstIdentifier, String secondIdentifier) {
     }
 
@@ -140,5 +163,8 @@ abstract class AbstractPairListCommand implements Command<SequenceMatcher> {
             return new PairSummary(this.firstIdentifier, this.secondIdentifier, this.firstTokenCount,
                     this.secondTokenCount, this.totalMatchLength, this.longestMatchLength);
         }
+    }
+
+    private record PairIdentifiers(String firstIdentifier, String secondIdentifier) {
     }
 }

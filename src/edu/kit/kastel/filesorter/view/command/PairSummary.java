@@ -32,11 +32,11 @@ record PairSummary(String firstIdentifier, String secondIdentifier,
         return Math.min(similarityToFirst(), similarityToSecond());
     }
 
-    private double similarityToFirst() {
+    double similarityToFirst() {
         return similarity(this.firstTokenCount);
     }
 
-    private double similarityToSecond() {
+    double similarityToSecond() {
         return similarity(this.secondTokenCount);
     }
 
