@@ -270,22 +270,38 @@ public class SequenceMatcher {
                         && match.secondIdentifier().equals(firstIdentifier));
     }
 
-    private static int searchIndexFor(AnalysisMatch match, String searchIdentifier, String patternIdentifier) {
-        if (match.firstIdentifier().equals(searchIdentifier) && match.secondIdentifier().equals(patternIdentifier)) {
-            return match.firstIndex();
-        }
+    /**
+     * Determines the index of the match within the search text.
+     *
+     * @param match the match to inspect
+     * @param patternIdentifier the identifier of the pattern text
+     * @param searchIdentifier the identifier of the search text
+     * @return the index of the match within the search text
+     */
+    private static int searchIndexFor(AnalysisMatch match, String patternIdentifier, String searchIdentifier) {
         if (match.firstIdentifier().equals(patternIdentifier) && match.secondIdentifier().equals(searchIdentifier)) {
             return match.secondIndex();
+        }
+        if (match.firstIdentifier().equals(searchIdentifier) && match.secondIdentifier().equals(patternIdentifier)) {
+            return match.firstIndex();
         }
         throw new IllegalArgumentException(ERROR_INVALID_IDENTIFIER_MESSAGE);
     }
 
-    private static int patternIndexFor(AnalysisMatch match, String searchIdentifier, String patternIdentifier) {
-        if (match.firstIdentifier().equals(searchIdentifier) && match.secondIdentifier().equals(patternIdentifier)) {
-            return match.secondIndex();
-        }
+    /**
+     * Determines the index of the match within the pattern text.
+     *
+     * @param match the match to inspect
+     * @param patternIdentifier the identifier of the pattern text
+     * @param searchIdentifier the identifier of the search text
+     * @return the index of the match within the pattern text
+     */
+    private static int patternIndexFor(AnalysisMatch match, String patternIdentifier, String searchIdentifier) {
         if (match.firstIdentifier().equals(patternIdentifier) && match.secondIdentifier().equals(searchIdentifier)) {
             return match.firstIndex();
+        }
+        if (match.firstIdentifier().equals(searchIdentifier) && match.secondIdentifier().equals(patternIdentifier)) {
+            return match.secondIndex();
         }
         throw new IllegalArgumentException(ERROR_INVALID_IDENTIFIER_MESSAGE);
     }
