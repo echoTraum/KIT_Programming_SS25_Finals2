@@ -59,10 +59,12 @@ final class AnalysisResultListFormatter {
             for (int secondIndex = firstIndex + 1; secondIndex < identifiers.size(); secondIndex++) {
                 String firstIdentifier = identifiers.get(firstIndex);
                 String secondIdentifier = identifiers.get(secondIndex);
-                statistics.put(new PairKey(firstIdentifier, secondIdentifier),
-                        new PairStatistics(firstIdentifier, secondIdentifier,
-                                tokenizedTexts.get(firstIdentifier).size(),
-                                tokenizedTexts.get(secondIdentifier).size()));
+                PairKey key = PairKey.of(firstIdentifier, secondIdentifier);
+                List<String> firstTokens = tokenizedTexts.get(key.firstIdentifier());
+                List<String> secondTokens = tokenizedTexts.get(key.secondIdentifier());
+                statistics.put(key,
+                        new PairStatistics(key.firstIdentifier(), key.secondIdentifier(),
+                                firstTokens.size(), secondTokens.size()));
             }
         }
         return statistics;
@@ -71,15 +73,15 @@ final class AnalysisResultListFormatter {
     private static void applyMatches(List<AnalysisMatch> matches, Map<PairKey, PairStatistics> statistics,
             Map<String, List<String>> tokenizedTexts) {
         for (AnalysisMatch match : matches) {
-            PairKey key = new PairKey(match.firstIdentifier(), match.secondIdentifier());
+            PairKey key = PairKey.of(match.firstIdentifier(), match.secondIdentifier());
             PairStatistics stats = statistics.get(key);
             if (stats == null) {
-                List<String> firstTokens = tokenizedTexts.get(match.firstIdentifier());
-                List<String> secondTokens = tokenizedTexts.get(match.secondIdentifier());
+                List<String> firstTokens = tokenizedTexts.get(key.firstIdentifier());
+                List<String> secondTokens = tokenizedTexts.get(key.secondIdentifier());
                 if (firstTokens == null || secondTokens == null) {
                     continue;
                 }
-                stats = new PairStatistics(match.firstIdentifier(), match.secondIdentifier(),
+                stats = new PairStatistics(key.firstIdentifier(), key.secondIdentifier(),
                         firstTokens.size(), secondTokens.size());
                 statistics.put(key, stats);
             }
@@ -122,6 +124,16 @@ final class AnalysisResultListFormatter {
     }
 
     private record PairKey(String firstIdentifier, String secondIdentifier) {
+
+        private static PairKey of(String firstIdentifier, String secondIdentifier) {
+            if (firstIdentifier == null || secondIdentifier == null) {
+                return new PairKey(firstIdentifier, secondIdentifier);
+            }
+            if (firstIdentifier.compareTo(secondIdentifier) >= 0) {
+                return new PairKey(firstIdentifier, secondIdentifier);
+            }
+            return new PairKey(secondIdentifier, firstIdentifier);
+        }
     }
 
     private static final class PairStatistics {
