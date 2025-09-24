@@ -2,6 +2,8 @@ package edu.kit.kastel.filesorter.view;
 
 /**
  * Represents an interactive controller that handles commands in a specialised editing mode.
+ *
+ * @author ugsrv
  */
 public interface EditingController {
 

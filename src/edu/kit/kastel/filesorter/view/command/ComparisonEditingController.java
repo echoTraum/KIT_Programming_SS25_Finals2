@@ -14,6 +14,8 @@ import java.util.Locale;
 
 /**
  * Controller handling the interactive editing mode of a comparison.
+ *
+ * @author ugsrv
  */
 public class ComparisonEditingController implements EditingController {
 

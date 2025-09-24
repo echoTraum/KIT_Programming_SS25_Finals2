@@ -9,6 +9,8 @@ package edu.kit.kastel.filesorter.view;
  * {@link UnsupportedOperationException} to ensure the correct overload is used.</p>
  *
  * @param <T> the type of the model handled by the command
+ *
+ * @author ugsrv
  */
 public interface ExecuterCommand<T> extends Command<T> {
 

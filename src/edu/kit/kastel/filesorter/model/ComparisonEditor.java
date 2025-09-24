@@ -8,6 +8,8 @@ import java.util.Objects;
 
 /**
  * Provides editing facilities for the matches between two analysed texts.
+ *
+ * @author ugsrv
  */
 public final class ComparisonEditor {
 

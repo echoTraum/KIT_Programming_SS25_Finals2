@@ -7,6 +7,8 @@ import java.util.Set;
 
 /**
  * Metrics available when displaying the similarity of a comparison in the editing mode.
+ *
+ * @author ugsrv
  */
 enum ComparisonMetric {
 

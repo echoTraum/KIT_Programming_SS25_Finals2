@@ -9,6 +9,8 @@ import edu.kit.kastel.filesorter.view.Result;
 
 /**
  * Command that enters the interactive editing mode for a pair of texts.
+ *
+ * @author ugsrv
  */
 public class Edit implements ExecuterCommand<SequenceMatcher> {
 

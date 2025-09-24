@@ -160,7 +160,6 @@ public class CommandExecuter<M, K extends Enum<K> & Keyword<M>> {
 
         Result result;
         if (providedCommand instanceof ExecuterCommand<?> executerCommand) {
-            @SuppressWarnings("unchecked")
             ExecuterCommand<S> typedCommand = (ExecuterCommand<S>) executerCommand;
             result = typedCommand.execute(value, this);
         } else {

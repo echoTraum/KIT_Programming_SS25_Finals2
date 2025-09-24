@@ -2,6 +2,8 @@ package edu.kit.kastel.filesorter.model;
 
 /**
  * Exception signalling that an editing operation on a comparison could not be performed.
+ *
+ * @author ugsrv
  */
 public class ComparisonEditingException extends Exception {
 
