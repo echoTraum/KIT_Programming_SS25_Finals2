@@ -34,6 +34,7 @@ public class SequenceMatcher {
     private static final String ERROR_MISSING_STRATEGY = "No tokenization strategy provided.";
     private static final String ERROR_INVALID_MIN_MATCH_LENGTH = "Minimum match length must be positive.";
     private static final String MESSAGE_ANALYSIS_TOOK = "Analysis took %dms";
+    private static final String ERROR_NO_ANALYSIS_RESULT = "No analysis result available.";
     private static final String MESSAGE_CLEARED = "Cleared all texts.";
 
     private final Map<String, LoadedText> loadedTexts = new LinkedHashMap<>();
@@ -179,6 +180,26 @@ public class SequenceMatcher {
         return Result.success(MESSAGE_CLEARED);
     }
 
+    /**
+     * Lists statistics about the most recent analysis for each text pair using the provided metric
+     * and ordering.
+     *
+     * @param metric the metric determining which statistic to display
+     * @param order the order in which results should be returned
+     * @return the formatted result of the listing operation or an error if no analysis result exists
+     */
+    public Result list(ListMetric metric, SortOrder order) {
+        Objects.requireNonNull(metric);
+        Objects.requireNonNull(order);
+
+        if (this.lastAnalysisResult == null) {
+            return Result.error(ERROR_NO_ANALYSIS_RESULT);
+        }
+
+        return Result.success(AnalysisResultListFormatter
+                .format(this.lastAnalysisResult, metric, order));
+    }
+
     private static List<AnalysisMatch> collectMatches(Map<String, List<String>> tokenizedTexts, int minMatchLength) {
         List<AnalysisMatch> matches = new ArrayList<>();
         List<Entry<String, List<String>>> entries = new ArrayList<>(tokenizedTexts.entrySet());
@@ -211,8 +232,9 @@ public class SequenceMatcher {
     private static int determineMatchLength(List<String> firstTokens, List<String> secondTokens, int firstIndex,
             int secondIndex) {
         int length = 0;
-        for (; firstIndex + length < firstTokens.size() && secondIndex + length < secondTokens.size()
-                     && firstTokens.get(firstIndex + length).equals(secondTokens.get(secondIndex + length)); length++) {
+        while (firstIndex + length < firstTokens.size()
+                && secondIndex + length < secondTokens.size()
+                && firstTokens.get(firstIndex + length).equals(secondTokens.get(secondIndex + length))) {
             length++;
         }
         return length;

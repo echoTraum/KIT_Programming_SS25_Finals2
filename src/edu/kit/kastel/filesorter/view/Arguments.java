@@ -13,7 +13,7 @@ public class Arguments {
     private static final String ERROR_TOO_FEW_ARGUMENTS = "too few arguments";
     private static final String ERROR_NOT_A_NUMBER_FORMAT = "'%s' must be an integer.";
     private static final String ERROR_NOT_POSITIVE_FORMAT = "'%d' must be positive.";
-    private static final String SPACE = " ";
+    private static final String WORD_SEPARATOR = " ";
     private final String[] arguments;
     private int argumentIndex;
 
@@ -63,7 +63,7 @@ public class Arguments {
             throw new InvalidArgumentException(ERROR_TOO_FEW_ARGUMENTS);
         }
 
-        String remaining = String.join(SPACE, Arrays.copyOfRange(arguments, argumentIndex, arguments.length));
+        String remaining = String.join(WORD_SEPARATOR, Arrays.copyOfRange(arguments, argumentIndex, arguments.length));
         argumentIndex = arguments.length;
         return remaining;
     }
