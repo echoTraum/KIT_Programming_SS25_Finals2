@@ -240,12 +240,14 @@ public class SequenceMatcher {
         }
 
         relevantMatches.sort(Comparator.comparingInt(AnalysisMatch::length).reversed()
-                .thenComparingInt(AnalysisMatch::firstIndex)
-                .thenComparingInt(AnalysisMatch::secondIndex));
+                .thenComparingInt(match -> searchIndexFor(match, firstIdentifier, secondIdentifier))
+                .thenComparingInt(match -> patternIndexFor(match, firstIdentifier, secondIdentifier)));
 
         List<String> lines = new ArrayList<>(relevantMatches.size());
         for (AnalysisMatch match : relevantMatches) {
-            lines.add(FORMAT_MATCH.formatted(match.length(), match.secondIndex(), match.firstIndex()));
+            int searchIndex = searchIndexFor(match, firstIdentifier, secondIdentifier);
+            int patternIndex = patternIndexFor(match, firstIdentifier, secondIdentifier);
+            lines.add(FORMAT_MATCH.formatted(match.length(), searchIndex, patternIndex));
         }
         return Result.success(String.join(System.lineSeparator(), lines));
     }
@@ -265,6 +267,26 @@ public class SequenceMatcher {
         return (match.firstIdentifier().equals(firstIdentifier) && match.secondIdentifier().equals(secondIdentifier))
                 || (match.firstIdentifier().equals(secondIdentifier)
                         && match.secondIdentifier().equals(firstIdentifier));
+    }
+
+    private static int searchIndexFor(AnalysisMatch match, String searchIdentifier, String patternIdentifier) {
+        if (match.firstIdentifier().equals(searchIdentifier) && match.secondIdentifier().equals(patternIdentifier)) {
+            return match.firstIndex();
+        }
+        if (match.firstIdentifier().equals(patternIdentifier) && match.secondIdentifier().equals(searchIdentifier)) {
+            return match.secondIndex();
+        }
+        throw new IllegalArgumentException("Match does not involve provided identifiers.");
+    }
+
+    private static int patternIndexFor(AnalysisMatch match, String searchIdentifier, String patternIdentifier) {
+        if (match.firstIdentifier().equals(searchIdentifier) && match.secondIdentifier().equals(patternIdentifier)) {
+            return match.secondIndex();
+        }
+        if (match.firstIdentifier().equals(patternIdentifier) && match.secondIdentifier().equals(searchIdentifier)) {
+            return match.firstIndex();
+        }
+        throw new IllegalArgumentException("Match does not involve provided identifiers.");
     }
 
     private static List<AnalysisMatch> collectMatches(Map<String, List<String>> tokenizedTexts, int minMatchLength) {
