@@ -59,17 +59,27 @@ public enum ListMetric {
         Objects.requireNonNull(value);
         String normalized = value.trim().toUpperCase(Locale.ROOT);
         return switch (normalized) {
-            case "AVG", "AVERAGE" -> AVG;
-            case "MAX", "MAXIMUM" -> MAX;
-            case "MIN", "MINIMUM" -> MIN;
-            case "LONG", "LONGEST" -> LONG;
-            case "LEN", "LENGTH" -> LEN;
+            case "AVG" -> AVG;
+            case "MAX" -> MAX;
+            case "MIN" -> MIN;
+            case "LEN" -> LEN;
+            case "LONG" -> LONG;
             default -> null;
         };
     }
 
     private enum MetricValueType {
+        /**
+         * Represents a metric value type that is an integer. This type is used to indicate
+         * that the corresponding metric holds a whole number of values.
+         */
         INTEGER,
+
+        /**
+         * Represents a metric value type expressed as a percentage.
+         * This type is used to indicate that the corresponding metric holds
+         * values in terms of a percentage scale, ranging from 0 to 100.
+         */
         PERCENTAGE
     }
 }
