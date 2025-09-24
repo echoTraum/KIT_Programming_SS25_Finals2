@@ -46,13 +46,13 @@ public enum ModelKeyword implements Keyword<SequenceMatcher> {
     /**
      * Keyword for the {@link List} command.
      */
-    LIST(arguments -> new List(parseListMetric(arguments), parseSortOrder(arguments, SortOrder.DESCENDING))),
+    LIST(arguments -> new List(parseListMetric(arguments), parseSortOrder(arguments))),
 
     /**
      * Keyword for the {@link Top} command.
      */
     TOP(arguments -> new Top(arguments.parsePositive(), parseListMetric(arguments),
-            parseSortOrder(arguments, SortOrder.DESCENDING)));
+            parseSortOrder(arguments)));
 
     private static final String ERROR_INVALID_PATH = "invalid path";
     private static final String ERROR_INVALID_STRATEGY = "invalid strategy";
@@ -122,10 +122,10 @@ public enum ModelKeyword implements Keyword<SequenceMatcher> {
         return metric;
     }
 
-    private static SortOrder parseSortOrder(Arguments arguments, SortOrder defaultOrder)
+    private static SortOrder parseSortOrder(Arguments arguments)
             throws InvalidArgumentException {
         if (arguments.isExhausted()) {
-            return defaultOrder;
+            return SortOrder.DESCENDING;
         }
         String orderArgument = arguments.parseString();
         SortOrder order = SortOrder.fromString(orderArgument);
