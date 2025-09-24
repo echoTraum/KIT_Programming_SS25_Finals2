@@ -57,7 +57,12 @@ public enum ModelKeyword implements Keyword<SequenceMatcher> {
      * Keyword for the {@link Top} command.
      */
     TOP(arguments -> new Top(arguments.parsePositive(), parseListMetric(arguments),
-            parseSortOrder(arguments)));
+            parseSortOrder(arguments))),
+
+    /**
+     * Keyword for the {@link Histogram} command.
+     */
+    HISTOGRAM(arguments -> new Histogram(parseListMetric(arguments)));
 
     private static final String ERROR_INVALID_PATH = "invalid path";
     private static final String ERROR_INVALID_STRATEGY = "invalid strategy";

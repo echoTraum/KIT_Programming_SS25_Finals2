@@ -45,6 +45,10 @@ public enum ListMetric {
         };
     }
 
+    boolean isPercentage() {
+        return this.valueType == MetricValueType.PERCENTAGE;
+    }
+
     /**
      * Parses the provided string into a {@link ListMetric}.
      *
